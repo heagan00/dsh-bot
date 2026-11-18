@@ -171,13 +171,25 @@ try {
       $keep = New-Object System.Windows.Forms.Button
       $keep.Text = '保留'
       $keep.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-      $keep.Left = 170; $keep.Top = 100; $keep.Width = 80; $keep.Height = 30
+      $keep.Left = 170; $keep.Top = 100; $keep.Width = 80; $keep.Height = 32
+      $keep.UseVisualStyleBackColor = $false
+      $keep.BackColor = [System.Drawing.Color]::FromArgb(58, 64, 72)
+      $keep.ForeColor = [System.Drawing.Color]::FromArgb(240, 242, 245)
+      $keep.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+      $keep.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(100, 110, 122)
+      $keep.Font = New-Object System.Drawing.Font('Microsoft YaHei', 9.5)
       $dlg.Controls.Add($keep)
 
       $ok = New-Object System.Windows.Forms.Button
       $ok.Text = '确认关闭'
       $ok.DialogResult = [System.Windows.Forms.DialogResult]::OK
-      $ok.Left = 262; $ok.Top = 100; $ok.Width = 90; $ok.Height = 30
+      $ok.Left = 262; $ok.Top = 100; $ok.Width = 90; $ok.Height = 32
+      $ok.UseVisualStyleBackColor = $false
+      $ok.BackColor = [System.Drawing.Color]::FromArgb(74, 150, 210)
+      $ok.ForeColor = [System.Drawing.Color]::White
+      $ok.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+      $ok.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(110, 180, 235)
+      $ok.Font = New-Object System.Drawing.Font('Microsoft YaHei', 9.5, [System.Drawing.FontStyle]::Bold)
       $dlg.Controls.Add($ok)
 
       # 回车/ESC 都默认「保留」，必须鼠标点「确认关闭」
