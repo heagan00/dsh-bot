@@ -149,10 +149,14 @@ try {
   $form.Controls.Add($box)
 
   $timer = New-Object System.Windows.Forms.Timer
-  $timer.Interval = 90000
-  $timer.Add_Tick({ $form.Close() })
-  $form.Add_Shown({ $timer.Start() })
+  $timer.Interval = 30000
+  $script:zhouTimer = $timer
+  $script:zhouForm = $form
+  $timer.Add_Tick({
+    try { $script:zhouForm.Close() } catch {}
+  })
   $form.Add_FormClosed({ $timer.Stop(); $timer.Dispose() })
+  $timer.Start()
   [System.Windows.Forms.Application]::Run($form)
   $form.Dispose()
 } finally {
