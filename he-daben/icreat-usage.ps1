@@ -13,15 +13,58 @@ function Show-Toast([string]$title, [string]$text) {
   if ($NoToast) { Write-Host "$title`n$text"; return }
   Add-Type -AssemblyName System.Windows.Forms
   Add-Type -AssemblyName System.Drawing
-  $n = New-Object System.Windows.Forms.NotifyIcon
-  $n.Icon = [System.Drawing.SystemIcons]::Information
-  $n.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
-  $n.BalloonTipTitle = $title
-  $n.BalloonTipText = $text
-  $n.Visible = $true
-  $n.ShowBalloonTip(15000)
-  Start-Sleep -Seconds 15
-  $n.Dispose()
+
+  $form = New-Object System.Windows.Forms.Form
+  $form.Text = $title
+  $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
+  $form.StartPosition = [System.Windows.Forms.FormStartPosition]::Manual
+  $form.TopMost = $true
+  $form.ShowInTaskbar = $false
+  $form.Width = 560
+  $form.Height = 300
+  $form.BackColor = [System.Drawing.Color]::FromArgb(22, 26, 30)
+  $screen = [System.Windows.Forms.Screen]::PrimaryScreen
+  $wa = $screen.WorkingArea
+  $form.Left = $wa.Right - $form.Width - 24
+  $form.Top = $wa.Bottom - $form.Height - 24
+
+  $accent = New-Object System.Windows.Forms.Panel
+  $accent.Dock = [System.Windows.Forms.DockStyle]::Top
+  $accent.Height = 5
+  $accent.BackColor = [System.Drawing.Color]::FromArgb(80, 170, 140)
+  $form.Controls.Add($accent)
+
+  $label = New-Object System.Windows.Forms.Label
+  $label.Text = $title
+  $label.Font = New-Object System.Drawing.Font('Microsoft YaHei', 14, [System.Drawing.FontStyle]::Bold)
+  $label.ForeColor = [System.Drawing.Color]::FromArgb(200, 240, 225)
+  $label.Left = 22; $label.Top = 18; $label.Width = 470; $label.Height = 30
+  $form.Controls.Add($label)
+
+  $close = New-Object System.Windows.Forms.Button
+  $close.Text = '×'
+  $close.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+  $close.FlatAppearance.BorderSize = 0
+  $close.ForeColor = [System.Drawing.Color]::FromArgb(180, 200, 195)
+  $close.BackColor = $form.BackColor
+  $close.Font = New-Object System.Drawing.Font('Microsoft YaHei', 15)
+  $close.Left = 520; $close.Top = 10; $close.Width = 30; $close.Height = 30
+  $close.Add_Click({ $form.Close() })
+  $form.Controls.Add($close)
+
+  $box = New-Object System.Windows.Forms.RichTextBox
+  $box.Text = $text
+  $box.ReadOnly = $true
+  $box.BorderStyle = [System.Windows.Forms.BorderStyle]::None
+  $box.ScrollBars = [System.Windows.Forms.RichTextBoxScrollBars]::Vertical
+  $box.BackColor = $form.BackColor
+  $box.ForeColor = [System.Drawing.Color]::FromArgb(220, 235, 230)
+  $box.Font = New-Object System.Drawing.Font('Microsoft YaHei', 11)
+  $box.Left = 20; $box.Top = 58; $box.Width = 520; $box.Height = 220
+  $form.Controls.Add($box)
+
+  [System.Windows.Forms.Application]::Run($form)
+  $form.Dispose()
 }
 
 function Get-Headers([string]$token) {

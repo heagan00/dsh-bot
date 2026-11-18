@@ -139,9 +139,12 @@ function Show-Tip {
   $box.Left = 18; $box.Top = 52; $box.Width = 424; $box.Height = 306
   $form.Controls.Add($box)
 
-  $timer = New-Object System.Windows.Forms.Timer
-  $timer.Interval = if ($Test) { [Math]::Max(3, $TestSeconds) * 1000 } else { 60000 }
-  $timer.Add_Tick({ $form.Close() })
+  $timer = $null
+  if ($Test) {
+    $timer = New-Object System.Windows.Forms.Timer
+    $timer.Interval = [Math]::Max(3, $TestSeconds) * 1000
+    $timer.Add_Tick({ $form.Close() })
+  }
 
   $voiceFile = Join-Path $root ("voice\tip-{0:D2}.mp3" -f ($idx + 1))
   $script:voicePlayer = $null
@@ -158,8 +161,10 @@ function Show-Tip {
         $script:voicePlayer = $null
         Stop-Ambient
         $script:voiceButton.Text = '朗读'
-        $script:formTimer.Interval = 30000
-        $script:formTimer.Start()
+        if ($script:formTimer) {
+          $script:formTimer.Interval = 30000
+          $script:formTimer.Start()
+        }
         $script:voiceTimer.Stop()
       }
     }
@@ -188,8 +193,6 @@ function Show-Tip {
         Stop-Ambient
         $script:voiceTimer.Stop()
         $speak.Text = '朗读'
-        $timer.Interval = 30000
-        $timer.Start()
         return
       }
 
@@ -202,7 +205,6 @@ function Show-Tip {
         $script:voicePlayer = $p
         Start-Ambient
         $speak.Text = '停止'
-        $timer.Stop()
         $script:voiceTimer.Start()
         return
       }
@@ -211,11 +213,8 @@ function Show-Tip {
         $synth.SpeakAsyncCancelAll()
         Stop-Ambient
         $speak.Text = '朗读'
-        $timer.Interval = 30000
-        $timer.Start()
         return
       }
-      $timer.Stop()
       Start-Ambient
       $synth.SpeakAsync($tip)
       $speak.Text = '停止'
@@ -226,16 +225,18 @@ function Show-Tip {
   $synth.Add_SpeakCompleted({
     $speak.Text = '朗读'
     Stop-Ambient
-    $timer.Interval = 30000
-    $timer.Start()
+    if ($script:formTimer) {
+      $script:formTimer.Interval = 30000
+      $script:formTimer.Start()
+    }
   })
 
   $form.Add_Shown({
     Log ("shown at {0} visible={1} topmost={2}" -f $form.Bounds, $form.Visible, $form.TopMost)
-    $timer.Start()
+    if ($timer) { $timer.Start() }
   })
   $form.Add_FormClosed({
-    $timer.Stop()
+    if ($timer) { $timer.Stop() }
     $voiceTimer.Stop()
     if ($script:voicePlayer) {
       try { $script:voicePlayer.Stop(); $script:voicePlayer.Close() } catch {}
@@ -244,7 +245,7 @@ function Show-Tip {
     Stop-Ambient
     try { $synth.SpeakAsyncCancelAll() } catch {}
     try { $synth.Dispose() } catch {}
-    $timer.Dispose()
+    if ($timer) { $timer.Dispose() }
     $voiceTimer.Dispose()
   })
 

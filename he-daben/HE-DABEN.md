@@ -7,7 +7,7 @@
 | 上班 | 每天 **07:00** |
 | 输出 | Windows 右下角弹窗：余额 + 今日/昨日/前日 + 3 日合计 |
 | 数据源 | `~/.icreat/token.txt` → iCreat 控制台 API |
-| 脚本 | `icreat-usage.ps1` |
+| 脚本 | `sync/icreat-usage.ps1` |
 | 计划任务 | `何大奔 · iCreat 用量提醒` |
 
 ## 数据口径
@@ -32,4 +32,6 @@ C:\Users\EDY\.icreat\登录iCreat.cmd
 
 登录后由 `tools/icreat-login.mjs` 读取专用 Chrome 的 Cookie/token。
 **token 只存本机 `~/.icreat/`，不进 Git。**
+
+弹窗**不会自动关闭**，必须手动点右上角 ×。
 

@@ -8,9 +8,9 @@
 | 频率 | 两次提醒间隔 **30–45 分钟**（start-to-start） |
 | 形式 | 主屏幕左下角卡片 + “朗读”按钮 + 随机 BGM/自然声 |
 | 声线 | **Microsoft Edge TTS `zh-CN-XiaoxiaoNeural`**，成年女性、自然语气，rate −5% |
-| 语音文件 | `voice/tip-01.mp3` … `tip-12.mp3`（本机预生成，不依赖网络） |
-| BGM | `audio/*.wav`；55% 纯音乐 / 45% 自然声，随机起点 |
-| 脚本 | `wang-dali.ps1` |
+| 语音文件 | `sync/voice/tip-01.mp3` … `tip-12.mp3`（本机预生成，不依赖网络） |
+| BGM | `sync/audio/*.wav`；55% 纯音乐 / 45% 自然声，随机起点 |
+| 脚本 | `sync/wang-dali.ps1` |
 | 计划任务 | `王大力 · 心理抚慰师`（每天 09:00） |
 
 ## 提醒逻辑
@@ -36,11 +36,13 @@ powershell.exe -NoProfile -STA -File "sync\wang-dali.ps1" -Test
 ## 重新生成语音
 
 ```powershell
-$tips = (Get-Content wang-dali-tips.json -Raw -Encoding UTF8 | ConvertFrom-Json).tips
+$tips = (Get-Content sync\wang-dali-tips.json -Raw -Encoding UTF8 | ConvertFrom-Json).tips
 for ($i=0; $i -lt $tips.Count; $i++) {
   $n = $i + 1
   uvx --from edge-tts edge-tts --voice zh-CN-XiaoxiaoNeural --rate=-5% `
-    --text $tips[$i] --write-media ("voice\tip-{0:D2}.mp3" -f $n)
+    --text $tips[$i] --write-media ("sync\voice\tip-{0:D2}.mp3" -f $n)
 }
 ```
+
+弹窗**不会自动关闭**，必须手动点右上角 ×；关闭前提醒会一直保留。
 
