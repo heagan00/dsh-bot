@@ -1,4 +1,4 @@
-﻿param(
+param(
   [switch]$NoToast
 )
 
@@ -148,15 +148,7 @@ try {
   $box.Left = 20; $box.Top = 56; $box.Width = 600; $box.Height = 380
   $form.Controls.Add($box)
 
-  $timer = New-Object System.Windows.Forms.Timer
-  $timer.Interval = 30000
-  $script:zhouTimer = $timer
   $script:zhouForm = $form
-  $timer.Add_Tick({
-    try { $script:zhouForm.Close() } catch {}
-  })
-  $form.Add_FormClosed({ $timer.Stop(); $timer.Dispose() })
-  $timer.Start()
   [System.Windows.Forms.Application]::Run($form)
   $form.Dispose()
 } finally {
