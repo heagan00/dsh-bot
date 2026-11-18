@@ -109,8 +109,9 @@ try {
   $form.BackColor = [System.Drawing.Color]::FromArgb(22, 22, 26)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
   $wa = $screen.WorkingArea
-  $form.Left = $wa.Right - $form.Width - 24
+  $form.Left = $wa.Left + [int](($wa.Width - $form.Width) / 2)
   $form.Top = $wa.Top + 24
+  Log ("position={0},{1} screen={2}" -f $form.Left, $form.Top, $screen.DeviceName)
 
   $accent = New-Object System.Windows.Forms.Panel
   $accent.Dock = [System.Windows.Forms.DockStyle]::Top

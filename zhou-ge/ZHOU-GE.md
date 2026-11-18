@@ -8,9 +8,9 @@
 | 任务名 | `周哥 · 全栈主程巡检` |
 | 检查范围 | `~/.dsh/sessions` 中最近 30 分钟活跃的会话 |
 | 分析器 | `tools/zhou-ge-analyze.mjs` |
-| UI | `zhou-ge.ps1`（主屏右上角，红色=算力警报） |
-| 报告 | `reports/zhou-ge-latest.md` / `.json` |
-| 日志 | `logs/zhou-ge.log` |
+| UI | `sync/zhou-ge.ps1`（主屏上方中间，红色=算力警报） |
+| 报告 | `sync/reports/zhou-ge-latest.md` / `.json` |
+| 日志 | `sync/logs/zhou-ge.log` |
 
 ## 优先级
 
