@@ -8,7 +8,11 @@ $botRoot = Join-Path $kb 'sync'
 $logDir = Join-Path $botRoot 'logs'
 $reportDir = Join-Path $botRoot 'reports'
 $logFile = Join-Path $logDir 'li-shen.log'
-New-Item -ItemType Directory -Force $logDir, $reportDir | Out-Null
+$backupRoot = Join-Path $kb 'backups'
+$botBackupDir = Join-Path $backupRoot 'bots'
+$skillBackupDir = Join-Path $backupRoot 'skills'
+$pluginBackupDir = Join-Path $backupRoot 'plugins'
+New-Item -ItemType Directory -Force $logDir, $reportDir, $botBackupDir, $skillBackupDir, $pluginBackupDir | Out-Null
 
 $now = Get-Date
 $cutLog = $now.AddDays(-14)
@@ -16,11 +20,88 @@ $cutReport = $now.AddDays(-30)
 $cutTemp = $now.AddDays(-7)
 $cutPng = $now.AddDays(-1)
 $deleted = New-Object System.Collections.Generic.List[object]
+$backups = New-Object System.Collections.Generic.List[object]
 $freed = 0L
 
 function Log([string]$msg) {
   Add-Content -Path $logFile -Value ("[{0}] {1}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $msg) -Encoding utf8
 }
+
+function Make-Zip($files, [string]$dest, [string]$label) {
+  if (-not $files -or @($files).Count -eq 0) {
+    Log ("BACKUP SKIP {0}: no files" -f $label)
+    return
+  }
+  if (-not $Apply) {
+    Log ("DRYRUN BACKUP {0} -> {1} ({2} files)" -f $label, $dest, @($files).Count)
+    $script:backups.Add([pscustomobject]@{ label = $label; path = $dest; files = @($files).Count; mode = 'DRYRUN' })
+    return
+  }
+  try {
+    $paths = @($files | ForEach-Object { if ($_ -is [System.IO.FileInfo]) { $_.FullName } else { [string]$_ } })
+    Compress-Archive -Path $paths -DestinationPath $dest -Force -ErrorAction Stop
+    $size = (Get-Item $dest).Length
+    Log ("BACKUP {0} -> {1} ({2} files, {3:N1} KB)" -f $label, $dest, @($files).Count, ($size / 1KB))
+    $script:backups.Add([pscustomobject]@{ label = $label; path = $dest; files = @($files).Count; mode = 'OK'; bytes = $size })
+  } catch {
+    Log ("BACKUP FAIL {0}: {1}" -f $label, $_.Exception.Message)
+  }
+}
+
+function Backup-Bots {
+  $files = Get-ChildItem $botRoot -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Extension -in @('.ps1', '.cmd', '.md', '.json') -and $_.Name -ne 'repair-push.ps1' }
+  $dest = Join-Path $botBackupDir 'bots-weekly.zip'
+  Make-Zip $files $dest 'bots（保留 1 份滚动版本）'
+  if ($Apply) {
+    Get-ChildItem $botBackupDir -File -Filter 'bots-*.zip' -ErrorAction SilentlyContinue |
+      Where-Object { $_.FullName -ne $dest } |
+      Remove-Item -Force -ErrorAction SilentlyContinue
+  }
+}
+
+function Backup-Skills {
+  $roots = @(
+    (Join-Path $env:USERPROFILE '.dsh\skills'),
+    (Join-Path $botRoot 'skills'),
+    (Join-Path $kb '.dsh\skills'),
+    (Join-Path $kb 'skills')
+  ) | Where-Object { Test-Path $_ }
+  $files = @()
+  foreach ($r in $roots) {
+    $files += Get-ChildItem $r -Recurse -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Extension -in @('.md', '.json', '.js', '.mjs', '.ts', '.py', '.ps1', '.yaml', '.yml') }
+  }
+  $dest = Join-Path $skillBackupDir ("skills-{0}.zip" -f $now.ToString('yyyy-MM-dd-HHmmss'))
+  Make-Zip $files $dest 'skills（保留所有历史版本）'
+}
+
+function Backup-Plugins {
+  $profile = $env:DSH_PROFILE_DIR
+  $files = @()
+  if ($profile -and (Test-Path $profile)) {
+    foreach ($n in @('cordis.patch.yml', 'cordis.yml', 'package.json', 'pnpm-lock.yaml')) {
+      $f = Join-Path $profile $n
+      if (Test-Path $f) { $files += Get-Item $f }
+    }
+  }
+  $cfg = Join-Path $botRoot 'dsh-config'
+  if (Test-Path $cfg) {
+    $files += Get-ChildItem $cfg -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Extension -in @('.yml', '.json', '.yaml') }
+  }
+  $dest = Join-Path $pluginBackupDir 'plugins-prev.zip'
+  Make-Zip $files $dest 'plugins（保留 1 份上一版本）'
+  if ($Apply) {
+    Get-ChildItem $pluginBackupDir -File -Filter 'plugins-*.zip' -ErrorAction SilentlyContinue |
+      Where-Object { $_.FullName -ne $dest } |
+      Remove-Item -Force -ErrorAction SilentlyContinue
+  }
+}
+
+Backup-Bots
+Backup-Skills
+Backup-Plugins
 
 function Clean-File([System.IO.FileInfo]$file, [datetime]$cut, [string]$why) {
   if (-not $file.Exists) { return }
@@ -86,6 +167,14 @@ if ($deleted.Count -eq 0) {
   $lines += "|---|---:|---|---|"
   foreach ($d in $deleted) {
     $lines += ("| {0} | {1:N1} | {2} | {3} |" -f $d.path, ($d.bytes / 1KB), $d.reason, $d.time)
+  }
+}
+$lines += @("", "## 备份", "")
+if ($backups.Count -eq 0) {
+  $lines += "本次没有可备份文件。"
+} else {
+  foreach ($b in $backups) {
+    $lines += ("- {0}：`{1}`（{2} 个文件，{3}）" -f $b.label, $b.path, $b.files, $b.mode)
   }
 }
 $lines += @("", "## 保护清单", "", "`sync/audio`、`sync/voice`、`latest.md`、`icreat-latest.*`、`wang-dali-state.json`、`~/.icreat/token.txt`、`session.txt`、`chrome-profile` 不清理。")

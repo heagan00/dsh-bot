@@ -4,8 +4,8 @@
 |---|---|
 | 名字 | 刘哥 |
 | 岗位 | 全栈工程师 / 主程（复核） |
-| 频率 | **每 5 分钟**（与周哥错开 2 分钟） |
-| 任务名 | `刘哥 · 周哥复核` |
+| 频率 | **由周哥弹窗触发**（无独立定时） |
+| 任务名 | 无独立任务；周哥触发 |
 | 输入 | `sync/reports/zhou-ge-latest.json` |
 | 审计器 | `tools/liu-ge-audit.mjs` |
 | UI | `sync/liu-ge.ps1`（主屏底部中间） |
@@ -44,9 +44,9 @@
 
 选“否”会继续保留；选“是”才关闭。
 
-## 手动
-
+## 启动方式\n\n周哥检测到需要弹窗时，会直接启动刘哥复核；不再有“刘哥每 5 分钟”任务。\n\n## 手动\n
 ```cmd
 schtasks /Run /TN "刘哥 · 周哥复核"
 powershell.exe -NoProfile -STA -File "sync\liu-ge.ps1" -NoToast
 ```
+

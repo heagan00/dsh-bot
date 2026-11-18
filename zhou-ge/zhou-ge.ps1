@@ -1,4 +1,4 @@
-param(
+﻿param(
   [switch]$NoToast
 )
 
@@ -94,6 +94,13 @@ try {
 
   Log ("alerts={0} high={1}" -f $show.Count, $high)
   if ($NoToast) { Write-Output $body; exit 0 }
+
+  # 刘哥只在周哥真正要弹窗时启动复核，不单独定时巡检
+  $liuScript = Join-Path $root 'liu-ge.ps1'
+  if (Test-Path $liuScript) {
+    Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-File', $liuScript) -WindowStyle Minimized
+    Log 'trigger liu-ge (zhou popup)'
+  }
 
   Add-Type -AssemblyName System.Windows.Forms
   Add-Type -AssemblyName System.Drawing

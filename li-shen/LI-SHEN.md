@@ -11,6 +11,18 @@
 | 报告 | `sync/reports/li-shen-latest.md` + `li-shen-YYYY-MM-DD.md` |
 | 日志 | `sync/logs/li-shen.log` |
 
+## 备份规则
+
+备份到 `backups/`（本机，已加入 `.gitignore`）：
+
+| 对象 | 规则 | 路径 |
+|---|---|---|
+| **BOT** | 每周覆盖 1 份滚动版本，保留一周前的代码 | `backups/bots/bots-weekly.zip` |
+| **skills** | 每次运行都新建，保留所有历史版本 | `backups/skills/skills-YYYY-MM-DD-HHmmss.zip` |
+| **plugins** | 保留 1 份上一版本（profile 配置 + dsh-config） | `backups/plugins/plugins-prev.zip` |
+
+> 当前没有自定义 `~/.dsh/skills`；有 skill 后会自动按时间戳全量备份。
+
 ## 清理规则
 
 | 对象 | 阈值 |
