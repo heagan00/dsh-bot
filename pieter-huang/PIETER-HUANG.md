@@ -58,6 +58,7 @@ PieterInputWatch = "C:\Users\EDY\Downloads\ComfyUI相关\sync\pieter-input-watch
 - 阿美：`sync/amei.ps1` → `sync/memory/amei-memory.json`
 - 阿威：`sync/awei.ps1` → `sync/memory/awei-memory.json`
 - 阿秃：`sync/atu.ps1` → `sync/memory/atu-memory.json`
+- 阿音：`sync/ayin.ps1` → `sync/memory/ayin-memory.json`
 
 它们不会各自起空白定时器；只在被传唤时工作，避免空转占算力。
 

@@ -69,7 +69,7 @@ function Show-Card([string]$title, [string]$body, [string[]]$buttons) {
   $form.StartPosition = [System.Windows.Forms.FormStartPosition]::Manual
   $form.TopMost = $true
   $form.ShowInTaskbar = $false
-  $form.Width = 640
+  $form.Width = 760
   $form.Height = 470
   $form.BackColor = [System.Drawing.Color]::FromArgb(24, 24, 28)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
@@ -88,7 +88,7 @@ function Show-Card([string]$title, [string]$body, [string[]]$buttons) {
   $label.Text = $title
   $label.Font = New-Object System.Drawing.Font('Microsoft YaHei', 13, [System.Drawing.FontStyle]::Bold)
   $label.ForeColor = [System.Drawing.Color]::FromArgb(245, 225, 190)
-  $label.Left = 20; $label.Top = 16; $label.Width = 560; $label.Height = 28
+  $label.Left = 20; $label.Top = 16; $label.Width = 680; $label.Height = 28
   $form.Controls.Add($label)
 
   $close = New-Object System.Windows.Forms.Button
@@ -98,7 +98,7 @@ function Show-Card([string]$title, [string]$body, [string[]]$buttons) {
   $close.ForeColor = [System.Drawing.Color]::FromArgb(185, 170, 150)
   $close.BackColor = $form.BackColor
   $close.Font = New-Object System.Drawing.Font('Microsoft YaHei', 14)
-  $close.Left = 600; $close.Top = 10; $close.Width = 30; $close.Height = 30
+  $close.Left = 720; $close.Top = 10; $close.Width = 30; $close.Height = 30
   $close.Add_Click({ $script:pieterChoice = '关闭'; $script:pieterForm.Close() })
   $form.Controls.Add($close)
 
@@ -110,7 +110,7 @@ function Show-Card([string]$title, [string]$body, [string[]]$buttons) {
   $box.BackColor = $form.BackColor
   $box.ForeColor = [System.Drawing.Color]::FromArgb(225, 225, 230)
   $box.Font = New-Object System.Drawing.Font('Microsoft YaHei', 10.5)
-  $box.Left = 20; $box.Top = 54; $box.Width = 600; $box.Height = 320
+  $box.Left = 20; $box.Top = 54; $box.Width = 720; $box.Height = 320
   $form.Controls.Add($box)
 
   $x = 20
@@ -212,12 +212,13 @@ function Start-Employee([string]$file, [string]$prompt) {
 }
 
 function Show-ApiMenu([string]$prompt) {
-  $choice = Show-Card '皮特·黄 · 传唤' ('官家，@阿皮 已候旨。要传哪位？' + "`r`n`r`n原文：" + (Clean-Prompt $prompt)) @('优化提示词', '阿美', '阿威', '阿秃', '取消')
+  $choice = Show-Card '皮特·黄 · 传唤' ('官家，@阿皮 已候旨。要传哪位？' + "`r`n`r`n原文：" + (Clean-Prompt $prompt)) @('优化提示词', '阿美', '阿威', '阿秃', '阿音', '取消')
   switch ($choice) {
     '优化提示词' { Show-Optimize $prompt }
     '阿美' { if (-not (Start-Employee 'amei.ps1' $prompt)) { Show-Amei $prompt } }
     '阿威' { if (-not (Start-Employee 'awei.ps1' $prompt)) { Show-Awei $prompt } }
     '阿秃' { if (-not (Start-Employee 'atu.ps1' $prompt)) { Show-Atu $prompt } }
+    '阿音' { if (-not (Start-Employee 'ayin.ps1' $prompt)) { Show-Card '阿音 · AI 音乐提示词' '阿音脚本未安装。' @('关闭') | Out-Null } }
   }
 }
 

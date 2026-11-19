@@ -17,6 +17,7 @@
 | **阿美** | 美术提示词 | `amei.ps1` | `memory/amei-memory.json` |
 | **阿威** | 视频提示词 | `awei.ps1` | `memory/awei-memory.json` |
 | **阿秃** | 代码提示词 | `atu.ps1` | `memory/atu-memory.json` |
+| **阿音** | AI 音乐 / SUNO 提示词 | `ayin.ps1` | `memory/ayin-memory.json` |
 
 三名员工由 `@阿皮` 子菜单启动；也可用命令行 `-Prompt` 单独调用。
 
