@@ -1,6 +1,6 @@
 # DSH BOT Staff
 
-十一个本地自动化 BOT 的源码与资源。固定周期任务走 Windows 计划任务；按需同僚由 `@阿皮` / 命令行调用。
+十三个本地自动化 BOT 的源码与资源。固定周期任务走 Windows 计划任务；按需同僚由 `@阿皮` / 命令行调用。
 
 | BOT | 岗位 | 时间 | 任务名 |
 |---|---|---|---|
@@ -11,6 +11,8 @@
 | **周哥** | 全栈工程师 / 主程 | 每 5 分钟 | `周哥 · 全栈主程巡检` |
 | **刘哥** | 全栈工程师 / 主程（复核） | 周哥弹窗时触发 | 无独立任务 |
 | **皮特·黄** | 提示词结构工程师 / 主程 | 每 2 分钟；每日 19:30 | `皮特·黄 · 长提示词检查` / `皮特·黄 · 每日提示词库` |
+| **李老师** | HRD / BOT 绩效 | 每天 22:30；周报/月报 | `李老师 · BOT绩效` |
+| **伟痞哥** | VP / 项目与商业 | 每天 21:00 / 22:00 | `伟痞哥 · 项目复盘` / `伟痞哥 · 项目更新` |
 | **阿美** | 美术提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
 | **阿威** | 视频提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
 | **阿秃** | 代码提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
@@ -29,6 +31,8 @@ zhou-ge/         ZHOU-GE.md, zhou-ge.ps1, zhou-ge.cmd
 liu-ge/          LIU-GE.md, liu-ge.ps1, liu-ge.cmd
 pieter-huang/    PIETER-HUANG.md, pieter-huang.ps1, employees docs, prompt library scripts
 employees/       amei.ps1 / awei.ps1 / atu.ps1 / ayin.ps1 + employee-lib
+li-teacher/      HRD 绩效评分与报告
+wei-pi-ge/       VP 项目评分与目标更新
 prompt-library/  wildcards/ 词库（生成内容默认不进 Git）
 tools/           iCreat 登录态读取/调试脚本
 ```

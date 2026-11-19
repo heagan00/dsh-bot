@@ -1,9 +1,11 @@
 ﻿param(
-  [switch]$NoToast
+  [switch]$NoToast,
+  [switch]$RepeatAudit
 )
 
 $ErrorActionPreference = 'Continue'
 $root = $PSScriptRoot
+. (Join-Path $root 'ui-theme.ps1')
 $reportDir = Join-Path $root 'reports'
 $logDir = Join-Path $root 'logs'
 New-Item -ItemType Directory -Force $reportDir, $logDir | Out-Null
@@ -94,6 +96,12 @@ try {
   foreach ($a in $items) {
     $key = [string]$a.zhouKey
     $last = if ($state.ContainsKey($key)) { [long]$state[$key] } else { 0 }
+    # 重复误报的严厉纠偏不受 30 分钟降噪限制
+    if ($a.severe) {
+      $state[$key] = $now
+      $show += $a
+      continue
+    }
     if ($now - $last -lt 1800) { continue }
     $state[$key] = $now
     $show += $a
@@ -145,6 +153,7 @@ try {
   $form.ShowInTaskbar = $false
   $form.Width = 640
   $form.Height = 500
+  Set-DshCardStyle $form ([System.Drawing.Color]::FromArgb(74, 150, 210))
   $form.BackColor = [System.Drawing.Color]::FromArgb(20, 24, 28)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
   $wa = $screen.WorkingArea

@@ -1,8 +1,10 @@
-﻿param(
+param(
   [switch]$NoToast
 )
 
 $ErrorActionPreference = 'Stop'
+$root = $PSScriptRoot
+. (Join-Path $root 'ui-theme.ps1')
 $base = 'https://icreat.ai/hub/third/api/nexus'
 $homeDir = Join-Path $env:USERPROFILE '.icreat'
 $tokenFile = Join-Path $homeDir 'token.txt'
@@ -22,6 +24,7 @@ function Show-Toast([string]$title, [string]$text) {
   $form.ShowInTaskbar = $false
   $form.Width = 560
   $form.Height = 300
+  Set-DshCardStyle $form ([System.Drawing.Color]::FromArgb(80, 170, 140))
   $form.BackColor = [System.Drawing.Color]::FromArgb(22, 26, 30)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
   $wa = $screen.WorkingArea

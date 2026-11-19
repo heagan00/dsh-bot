@@ -1,4 +1,5 @@
 ﻿$ErrorActionPreference = 'Continue'
+. (Join-Path $PSScriptRoot 'ui-theme.ps1')
 
 function Emp-Load([string]$file, [string]$owner, [string]$domain) {
   $mem = @{ owner = $owner; domain = $domain; updated = ''; samples = @(); traits = @{} }
@@ -77,6 +78,7 @@ function Emp-Show([string]$title, [string]$body, [string[]]$buttons, $accentColo
   $form.ShowInTaskbar = $false
   $form.Width = 660
   $form.Height = 520
+  Set-DshCardStyle $form $accentColor
   $form.BackColor = [System.Drawing.Color]::FromArgb(22, 24, 28)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
   $wa = $screen.WorkingArea

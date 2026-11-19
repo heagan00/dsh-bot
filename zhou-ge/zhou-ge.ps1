@@ -4,6 +4,7 @@
 
 $ErrorActionPreference = 'Continue'
 $root = $PSScriptRoot
+. (Join-Path $root 'ui-theme.ps1')
 $reportDir = Join-Path $root 'reports'
 $logDir = Join-Path $root 'logs'
 New-Item -ItemType Directory -Force $reportDir, $logDir | Out-Null
@@ -52,16 +53,26 @@ try {
     } catch {}
   }
   $kept = @()
+  $suppressed = @()
   foreach ($a in $alerts) {
     $pattern = ([string]$a.key -split ':')[0]
     $mem = $memory[$pattern]
     if ($mem -and $mem.agreed -and [int]$mem.count -gt 0 -and [string]$mem.session -eq [string]$a.sessionId) {
       Log ("memory suppress pattern={0} key={1}" -f $pattern, $a.key)
+      $suppressed += $a
       continue
     }
     $kept += $a
   }
   $alerts = $kept
+  if ($suppressed.Count -gt 0) {
+    # 周哥不再重复误报，但仍让刘哥做一次重复误报纠偏
+    $liuScript = Join-Path $root 'liu-ge.ps1'
+    if (Test-Path $liuScript) {
+      Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-File', $liuScript, '-RepeatAudit') -WindowStyle Minimized
+      Log ("trigger liu repeat audit suppressed={0}" -f $suppressed.Count)
+    }
+  }
   if ($alerts.Count -eq 0) { Log 'all suppressed by memory'; exit 0 }
 
   $state = @{}
@@ -137,6 +148,7 @@ try {
   $form.ShowInTaskbar = $false
   $form.Width = 640
   $form.Height = 460
+  Set-DshCardStyle $form ([System.Drawing.Color]::FromArgb(224, 74, 64))
   $form.BackColor = [System.Drawing.Color]::FromArgb(22, 22, 26)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
   $wa = $screen.WorkingArea

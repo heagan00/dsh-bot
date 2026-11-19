@@ -46,3 +46,25 @@ for ($i=0; $i -lt $tips.Count; $i++) {
 
 弹窗**不会自动关闭**，必须手动点右上角 ×；关闭前提醒会一直保留。
 
+## 引用池
+
+`sync/wang-dali-quotes.json`：名人名言、名著、影视、动画、游戏台词；外文带中英双语。
+
+- 每次随机，不按固定顺序轮播
+- 状态记录最近 12 条，避免短期重复
+- 每条可带 `audio` 字段；填本机音频路径即可优先播放“原作音频”
+- 没有音频时用 TTS 朗读，中文/译文都会读
+
+新增引用：往 JSON 的 `quotes` 数组加对象即可：
+
+```json
+{
+  "id": "unique-id",
+  "original": "原文",
+  "zh": "中文",
+  "source": "出处",
+  "lang": "en",
+  "audio": "voice/quotes/unique-id.mp3"
+}
+```
+

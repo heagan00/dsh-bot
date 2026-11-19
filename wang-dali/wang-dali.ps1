@@ -1,4 +1,4 @@
-﻿param(
+param(
   [switch]$Test,
   [int]$TestCount = 1,
   [int]$TestSeconds = 6
@@ -6,24 +6,48 @@
 
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
+. (Join-Path $root 'ui-theme.ps1')
 $tipsFile = Join-Path $root 'wang-dali-tips.json'
 $logDir = Join-Path $root 'logs'
 New-Item -ItemType Directory -Force $logDir | Out-Null
 $log = Join-Path $logDir 'wang-dali.log'
 $stateFile = Join-Path $logDir 'wang-dali-state.json'
 $tips = (Get-Content $tipsFile -Raw -Encoding UTF8 | ConvertFrom-Json).tips
+$quotesFile = Join-Path $root 'wang-dali-quotes.json'
+$quotes = @()
+if (Test-Path $quotesFile) { $quotes = @((Get-Content $quotesFile -Raw -Encoding UTF8 | ConvertFrom-Json).quotes) }
 
-function Get-LastShown {
-  if (-not (Test-Path $stateFile)) { return $null }
-  try {
-    $s = Get-Content $stateFile -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($s.lastShown) { return [DateTime]::Parse($s.lastShown) }
-  } catch {}
-  return $null
+$reflections = @(
+  '很多压力不是因为事情本身有多大，而是你把“做完”和“做好”绑得太紧。先把今天这一小段做完，允许它不完美。人是在一次次可交付里恢复信心的，不是在脑子里把自己说服的。',
+  '你现在需要的不是更用力，而是更具体。把问题拆成一个可以在二十分钟内推进的动作：写一行、改一处、问一句。动作会把你从反刍里带出来。',
+  '别人看到的是结果，你经历的是全过程。不要拿自己的幕后，去比别人的高光。今天只和昨天的自己比一件事：有没有多推进一点，有没有少一点内耗。',
+  '休息不是奖励，是工作的一部分。你恢复得越好，判断越稳，做得越久。到点就离开屏幕十分钟，走一走，喝口水，让眼睛看看远处。',
+  '你不需要对所有人的情绪和所有项目的成败负责。先把属于你的那一段做好：明确目标，说清风险，给出方案，然后允许别人做他们的部分。边界不是冷漠，是长期在场。',
+  '意义常常不是想出来的，是做出来的。你把一个需求拆清楚，把一段代码写稳，把一个画面改到能交付，这些动作本身就在回答“我有什么用”。',
+  '如果今天很糟，先别给整个人生下结论。糟糕的一天只是一天。洗个澡，吃点东西，睡一觉；明天再用一个新的小时重新开始。',
+  '你不是机器，不需要持续燃烧才叫努力。能稳定地重复，才是更长久的力量。今天做完一件具体的事，然后承认它有意义。'
+)
+
+function Get-State {
+  $s = [pscustomobject]@{ lastShown = ''; recentQuotes = @() }
+  if (Test-Path $stateFile) {
+    try {
+      $old = Get-Content $stateFile -Raw -Encoding UTF8 | ConvertFrom-Json
+      if ($old.lastShown) { $s.lastShown = $old.lastShown }
+      if ($old.recentQuotes) { $s.recentQuotes = @($old.recentQuotes) }
+    } catch {}
+  }
+  return $s
 }
 
-function Set-LastShown([DateTime]$t) {
-  @{ lastShown = $t.ToString('o') } | ConvertTo-Json | Set-Content $stateFile -Encoding utf8
+function Set-State($s) {
+  $s | ConvertTo-Json -Depth 4 | Set-Content $stateFile -Encoding utf8
+}
+
+function Get-LastShown {
+  $s = Get-State
+  if ($s.lastShown) { return [DateTime]::Parse($s.lastShown) }
+  return $null
 }
 
 function Log([string]$msg) {
@@ -67,12 +91,36 @@ function Stop-Ambient {
 }
 
 function Show-Tip {
-  $idx = Get-Random -Minimum 0 -Maximum $tips.Count
-  if ($script:lastIndex -eq $idx -and $tips.Count -gt 1) { $idx = ($idx + 1) % $tips.Count }
-  $script:lastIndex = $idx
-  $tip = $tips[$idx]
+  $state = Get-State
+  $quote = $null
+  $tip = ''
+  $quoteLabel = ''
+
+  if ($quotes.Count -gt 0) {
+    $recent = @($state.recentQuotes)
+    $candidates = @($quotes | Where-Object { $recent -notcontains $_.id })
+    if ($candidates.Count -eq 0) { $candidates = @($quotes); $recent = @() }
+    $quote = $candidates | Get-Random
+    $recent = @(@($recent) + $quote.id | Select-Object -Last 12)
+    $state.recentQuotes = $recent
+    $quoteLabel = $quote.id
+    $original = [string]$quote.original
+    $zh = [string]$quote.zh
+    $source = [string]$quote.source
+    $tip = $original
+    if ($zh -and $zh -ne $original) { $tip += "`r`n`r`n【中文】`r`n" + $zh }
+    $tip += "`r`n`r`n—— " + $source
+    $reflection = $reflections | Get-Random
+    $tip += "`r`n`r`n" + $reflection
+  } else {
+    $idx = Get-Random -Minimum 0 -Maximum $tips.Count
+    $quoteLabel = "tip-$($idx + 1)"
+    $tip = $tips[$idx]
+  }
+
   $shownAt = Get-Date
-  Set-LastShown $shownAt
+  $state.lastShown = $shownAt.ToString('o')
+  Set-State $state
   $text = "王大力 · " + (Get-Date -Format 'HH:mm') + "`r`n`r`n" + $tip + "`r`n`r`n—— 王大力"
 
   Add-Type -AssemblyName System.Windows.Forms
@@ -91,6 +139,7 @@ function Show-Tip {
   $form.BackColor = [System.Drawing.Color]::FromArgb(28, 24, 20)
   $form.Width = 460
   $form.Height = 380
+  Set-DshCardStyle $form ([System.Drawing.Color]::FromArgb(110, 160, 220))
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
   $wa = $screen.WorkingArea
   $form.Left = $wa.Left + 24
@@ -158,7 +207,16 @@ function Show-Tip {
     $timer.Add_Tick({ $form.Close() })
   }
 
-  $voiceFile = Join-Path $root ("voice\tip-{0:D2}.mp3" -f ($idx + 1))
+  $voiceFile = ''
+  if ($quote) {
+    if ($quote.audio) {
+      $candidate = [string]$quote.audio
+      if (-not [System.IO.Path]::IsPathRooted($candidate)) { $candidate = Join-Path $root $candidate }
+      if (Test-Path $candidate) { $voiceFile = $candidate }
+    }
+  } else {
+    $voiceFile = Join-Path $root ("voice\tip-{0:D2}.mp3" -f ($idx + 1))
+  }
   $script:voicePlayer = $null
   $script:voiceButton = $speak
   $script:formTimer = $timer
@@ -261,7 +319,7 @@ function Show-Tip {
     $voiceTimer.Dispose()
   })
 
-  Log ("show tip #{0}" -f ($idx + 1))
+  Log ("show quote/source #{0}" -f $quoteLabel)
   try {
     [System.Windows.Forms.Application]::Run($form)
   } catch {

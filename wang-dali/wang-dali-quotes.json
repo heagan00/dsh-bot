@@ -1,0 +1,228 @@
+{
+  "quotes": [
+    {
+      "id": "marcus-1",
+      "original": "You have power over your mind — not outside events. Realize this, and you will find strength.",
+      "zh": "你能控制的是自己的心，而不是外界发生的事。明白这一点，你就会找到力量。",
+      "source": "马可·奥勒留《沉思录》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "frankl-1",
+      "original": "When we are no longer able to change a situation, we are challenged to change ourselves.",
+      "zh": "当我们无法改变处境时，就被挑战着去改变自己。",
+      "source": "维克多·弗兰克尔《活出生命的意义》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "nietzsche-1",
+      "original": "He who has a why to live can bear almost any how.",
+      "zh": "一个人知道自己为什么而活，就可以忍受任何一种生活。",
+      "source": "尼采《偶像的黄昏》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "camus-1",
+      "original": "In the midst of winter, I found there was, within me, an invincible summer.",
+      "zh": "在严冬深处，我终于发现，自己心里有一个不可战胜的夏天。",
+      "source": "加缪《夏天集》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "rilke-1",
+      "original": "Let everything happen to you: beauty and terror. Just keep going. No feeling is final.",
+      "zh": "让一切发生：美与恐惧。继续走。没有一种感受是最终的。",
+      "source": "里尔克《给青年诗人的信》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "seneca-1",
+      "original": "We suffer more often in imagination than in reality.",
+      "zh": "我们更多是在想象中受苦，而不是在现实里。",
+      "source": "塞内加《致卢西利乌斯书信》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "epictetus-1",
+      "original": "It's not what happens to you, but how you react to it that matters.",
+      "zh": "重要的不是发生在你身上的事，而是你如何回应它。",
+      "source": "爱比克泰德《手册》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "shakespeare-1",
+      "original": "Our doubts are traitors, and make us lose the good we oft might win by fearing to attempt.",
+      "zh": "我们的疑虑是叛徒，因害怕尝试，让我们失去本可赢得的好事。",
+      "source": "莎士比亚《一报还一报》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "tolkein-1",
+      "original": "Not all those who wander are lost.",
+      "zh": "并非所有游荡的人都迷失了方向。",
+      "source": "托尔金《魔戒》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "lotr-1",
+      "original": "Even the smallest person can change the course of the future.",
+      "zh": "即使是最渺小的人，也能改变未来的走向。",
+      "source": "《指环王》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "starwars-1",
+      "original": "May the Force be with you.",
+      "zh": "愿原力与你同在。",
+      "source": "《星球大战》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "batman-1",
+      "original": "Why do we fall? So we can learn to pick ourselves up.",
+      "zh": "我们为什么跌倒？为了学会自己站起来。",
+      "source": "《蝙蝠侠：侠影之谜》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "potter-1",
+      "original": "It is not our abilities that show what we truly are. It is our choices.",
+      "zh": "决定我们成为什么样的人的，不是能力，而是选择。",
+      "source": "《哈利·波特与密室》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "kungfu-1",
+      "original": "Yesterday is history, tomorrow is a mystery, but today is a gift. That is why it is called the present.",
+      "zh": "昨天是历史，明天是谜团，今天是礼物，所以叫 present。",
+      "source": "《功夫熊猫》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "hobbit-1",
+      "original": "The world is not in your books and maps. It's out there.",
+      "zh": "世界不在你的书本和地图里，它就在外面。",
+      "source": "《霍比特人》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "fallout-1",
+      "original": "War. War never changes.",
+      "zh": "战争，战争从未改变。",
+      "source": "《辐射》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "zelda-1",
+      "original": "It's dangerous to go alone! Take this.",
+      "zh": "一个人上路很危险，拿着这个。",
+      "source": "《塞尔达传说》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "bebop-1",
+      "original": "Whatever happens, happens.",
+      "zh": "该发生的，总会发生。",
+      "source": "《星际牛仔》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "onepiece-1",
+      "original": "If you don't take risks, you can't create a future.",
+      "zh": "不冒险，就创造不出未来。",
+      "source": "《海贼王》",
+      "lang": "en",
+      "audio": ""
+    },
+    {
+      "id": "laozi-1",
+      "original": "千里之行，始于足下。",
+      "zh": "千里之行，始于足下。",
+      "source": "老子《道德经》",
+      "lang": "zh",
+      "audio": ""
+    },
+    {
+      "id": "zhuangzi-1",
+      "original": "人生天地之间，若白驹之过隙，忽然而已。",
+      "zh": "人生天地之间，若白驹之过隙，忽然而已。",
+      "source": "《庄子·知北游》",
+      "lang": "zh",
+      "audio": ""
+    },
+    {
+      "id": "sushi-1",
+      "original": "竹杖芒鞋轻胜马，谁怕？一蓑烟雨任平生。",
+      "zh": "竹杖芒鞋轻胜马，谁怕？一蓑烟雨任平生。",
+      "source": "苏轼《定风波》",
+      "lang": "zh",
+      "audio": ""
+    },
+    {
+      "id": "wangwei-1",
+      "original": "行到水穷处，坐看云起时。",
+      "zh": "行到水穷处，坐看云起时。",
+      "source": "王维《终南别业》",
+      "lang": "zh",
+      "audio": ""
+    },
+    {
+      "id": "libai-1",
+      "original": "长风破浪会有时，直挂云帆济沧海。",
+      "zh": "长风破浪会有时，直挂云帆济沧海。",
+      "source": "李白《行路难》",
+      "lang": "zh",
+      "audio": ""
+    },
+    {
+      "id": "tao-1",
+      "original": "盛年不重来，一日难再晨。及时当勉励，岁月不待人。",
+      "zh": "盛年不重来，一日难再晨。及时当勉励，岁月不待人。",
+      "source": "陶渊明《杂诗》",
+      "lang": "zh",
+      "audio": ""
+    },
+    {
+      "id": "wangyangming-1",
+      "original": "此心光明，亦复何言。",
+      "zh": "此心光明，亦复何言。",
+      "source": "王阳明",
+      "lang": "zh",
+      "audio": ""
+    },
+    {
+      "id": "caocao-1",
+      "original": "老骥伏枥，志在千里；烈士暮年，壮心不已。",
+      "zh": "老骥伏枥，志在千里；烈士暮年，壮心不已。",
+      "source": "曹操《龟虽寿》",
+      "lang": "zh",
+      "audio": ""
+    },
+    {
+      "id": "mencius-1",
+      "original": "穷则独善其身，达则兼济天下。",
+      "zh": "穷则独善其身，达则兼济天下。",
+      "source": "《孟子·尽心上》",
+      "lang": "zh",
+      "audio": ""
+    }
+  ]
+}

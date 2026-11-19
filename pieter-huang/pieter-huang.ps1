@@ -1,4 +1,4 @@
-﻿param(
+param(
   [switch]$Test,
   [switch]$ForceMention,
   [string]$Prompt = ''
@@ -6,6 +6,7 @@
 
 $ErrorActionPreference = 'Continue'
 $root = $PSScriptRoot
+. (Join-Path $root 'ui-theme.ps1')
 $node = Join-Path $env:LOCALAPPDATA 'Programs\DeepSeek Harness\DeepSeek Harness.exe'
 $watchScript = Join-Path $root '..\tools\prompt-watch.mjs'
 $reportDir = Join-Path $root 'reports'
@@ -71,6 +72,7 @@ function Show-Card([string]$title, [string]$body, [string[]]$buttons) {
   $form.ShowInTaskbar = $false
   $form.Width = 760
   $form.Height = 470
+  Set-DshCardStyle $form ([System.Drawing.Color]::FromArgb(190, 150, 90))
   $form.BackColor = [System.Drawing.Color]::FromArgb(24, 24, 28)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
   $wa = $screen.WorkingArea
