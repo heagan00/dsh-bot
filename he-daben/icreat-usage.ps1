@@ -24,7 +24,7 @@ function Show-Toast([string]$title, [string]$text) {
   $form.TopMost = $true
   $form.ShowInTaskbar = $false
   $form.Width = 560
-  $form.Height = 340
+  $form.Height = 400
   Set-DshCardStyle $form ([System.Drawing.Color]::FromArgb(80, 170, 140))
   $form.BackColor = [System.Drawing.Color]::FromArgb(22, 26, 30)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
@@ -60,11 +60,11 @@ function Show-Toast([string]$title, [string]$text) {
   $box.Text = $text
   $box.ReadOnly = $true
   $box.BorderStyle = [System.Windows.Forms.BorderStyle]::None
-  $box.ScrollBars = [System.Windows.Forms.RichTextBoxScrollBars]::Vertical
+  $box.ScrollBars = [System.Windows.Forms.RichTextBoxScrollBars]::None
   $box.BackColor = $form.BackColor
   $box.ForeColor = [System.Drawing.Color]::FromArgb(220, 235, 230)
   $box.Font = New-Object System.Drawing.Font('Microsoft YaHei', 11)
-  $box.Left = 20; $box.Top = 58; $box.Width = 520; $box.Height = 260
+  $box.Left = 20; $box.Top = 58; $box.Width = 520; $box.Height = 320
   $form.Controls.Add($box)
   $form.Add_Shown({
     $box.SelectionStart = 0
@@ -154,6 +154,30 @@ try {
   try { if (Test-Path $dshUsageFile) { $dsh = Get-Content $dshUsageFile -Raw -Encoding utf8 | ConvertFrom-Json } } catch {}
   Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 
+  # DeepSeek 平台人民币余额/累计消耗
+  $dshCny = $null
+  try {
+    $cred = Get-Content (Join-Path $homeDir '..\.dsh\.credentials.yaml') -Raw -Encoding utf8
+    $dt = [regex]::Match($cred, 'deepseek-account-platform/default:[\s\S]*?token:\s*(\S+)').Groups[1].Value
+    if ($dt) {
+      $r = Invoke-RestMethod -Uri 'https://platform.deepseek.com/api/v0/users/get_user_summary' -Headers @{
+        'x-dsh-auth-token' = $dt
+        'Accept' = 'application/json'
+        'Origin' = 'https://platform.deepseek.com'
+        'Referer' = 'https://platform.deepseek.com/'
+      } -TimeoutSec 20
+      $bd = $r.data.biz_data
+      $wallet = @($bd.normal_wallets) | Where-Object { $_.currency -eq 'CNY' } | Select-Object -First 1
+      $bonus = @($bd.bonus_wallets) | Where-Object { $_.currency -eq 'CNY' } | Select-Object -First 1
+      $cost = @($bd.total_costs) | Where-Object { $_.currency -eq 'CNY' } | Select-Object -First 1
+      $dshCny = [pscustomobject]@{
+        balance = if ($wallet) { [double]$wallet.balance } else { 0.0 }
+        bonus = if ($bonus) { [double]$bonus.balance } else { 0.0 }
+        totalCost = if ($cost) { [double]$cost.amount } else { 0.0 }
+      }
+    }
+  } catch {}
+
   $usageLines = @(
     '# 何大奔 · 用量报表',
     '',
@@ -175,6 +199,12 @@ try {
     $usageLines += ('- 累计：{0:N0} tokens / 会话 {1}' -f [double]$dsh.total.tokens, [double]$dsh.total.sessions)
   } else {
     $usageLines += '- DSH 用量读取失败；检查 ~/.dsh/sessions。'
+  }
+  if ($dshCny) {
+    $usageLines += ('- 人民币余额：¥{0:N2}' -f $dshCny.balance)
+    $usageLines += ('- 账户累计消耗：¥{0:N2}' -f $dshCny.totalCost)
+  } else {
+    $usageLines += '- 人民币余额/消耗读取失败；检查 DSH 账户登录。'
   }
   $usageLines += @('', '## 结论', '', '- iCreat 按现金消耗统计；DSH 按会话 token 统计，两者口径不同，不直接相加。')
   $usageText = $usageLines -join "`n"
@@ -208,6 +238,12 @@ try {
   } else {
     $lines += ''
     $lines += 'DSH 用量读取失败'
+  }
+  if ($dshCny) {
+    $lines += ("DSH 人民币余额 ¥{0:N2}" -f $dshCny.balance)
+    $lines += ("DSH 累计消耗 ¥{0:N2}" -f $dshCny.totalCost)
+  } else {
+    $lines += 'DSH 人民币余额读取失败'
   }
 
   $text = $lines -join "`n"
