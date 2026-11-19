@@ -47,13 +47,13 @@ PieterInputWatch = "C:\Users\EDY\Downloads\ComfyUI相关\sync\pieter-input-watch
 [优化提示词] [阿美] [阿威] [阿秃] [取消]
 ```
 
-| 员工 | 职责 |
+| 同僚 | 职责 |
 |---|---|
 | **阿美** | 美术教授 / 天美美术总监视角；整理角色、场景、道具、UI、ICON、插画、分镜、关键帧；支持 wildcards 随机 |
 | **阿威** | 视频生成提示词；镜头、动作、运镜、光线、时长、音频 |
 | **阿秃** | 代码提示词；目标、技术栈、输入、约束、验收、测试 |
 
-三名员工是**独立 bot**，由 `@阿皮` 子菜单启动，各自有独立记忆：
+四位同僚是**平等的独立 bot**，由 `@阿皮` 协同菜单启动，各自有独立记忆；不是上下级，只是领域分工：
 
 - 阿美：`sync/amei.ps1` → `sync/memory/amei-memory.json`
 - 阿威：`sync/awei.ps1` → `sync/memory/awei-memory.json`

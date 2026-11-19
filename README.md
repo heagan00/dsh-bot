@@ -1,6 +1,6 @@
 # DSH BOT Staff
 
-七个本地自动化 BOT 的源码与资源。都走 Windows 计划任务，不依赖 DSH 在线，不需要逐次授权。
+十一个本地自动化 BOT 的源码与资源。固定周期任务走 Windows 计划任务；按需同僚由 `@阿皮` / 命令行调用。
 
 | BOT | 岗位 | 时间 | 任务名 |
 |---|---|---|---|
@@ -11,6 +11,12 @@
 | **周哥** | 全栈工程师 / 主程 | 每 5 分钟 | `周哥 · 全栈主程巡检` |
 | **刘哥** | 全栈工程师 / 主程（复核） | 周哥弹窗时触发 | 无独立任务 |
 | **皮特·黄** | 提示词结构工程师 / 主程 | 每 2 分钟；每日 19:30 | `皮特·黄 · 长提示词检查` / `皮特·黄 · 每日提示词库` |
+| **阿美** | 美术提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
+| **阿威** | 视频提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
+| **阿秃** | 代码提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
+| **阿音** | AI 音乐 / SUNO 提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
+
+> 阿美、阿威、阿秃、阿音与皮特·黄是平等的 BOT Staff，只是领域分工不同；每人独立脚本、独立记忆。
 
 ## 目录
 
@@ -22,7 +28,7 @@ li-shen/         LI-SHEN.md, li-shen-cleanup.ps1, li-shen.cmd
 zhou-ge/         ZHOU-GE.md, zhou-ge.ps1, zhou-ge.cmd
 liu-ge/          LIU-GE.md, liu-ge.ps1, liu-ge.cmd
 pieter-huang/    PIETER-HUANG.md, pieter-huang.ps1, employees docs, prompt library scripts
-employees/       amei.ps1 / awei.ps1 / atu.ps1 + employee-lib
+employees/       amei.ps1 / awei.ps1 / atu.ps1 / ayin.ps1 + employee-lib
 prompt-library/  wildcards/ 词库（生成内容默认不进 Git）
 tools/           iCreat 登录态读取/调试脚本
 ```
