@@ -1,0 +1,14 @@
+﻿{
+    "entries":  {
+                    "token":  {
+                                  "count":  1,
+                                  "agreed":  true,
+                                  "last":  "2026-11-19 11:34:21",
+                                  "session":  "session-43363565-5d11-4ef4-964d-9542a996e8f0",
+                                  "zhouMessage":  "近 30 分钟消耗 13142k tokens",
+                                  "judgment":  "刘哥判断正确：周哥本次为误报"
+                              }
+                },
+    "owner":  "周哥",
+    "updated":  "2026-11-19 11:34:21"
+}

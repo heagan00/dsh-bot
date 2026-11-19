@@ -17,7 +17,7 @@
 
 | 对象 | 规则 | 路径 |
 |---|---|---|
-| **BOT** | 每周覆盖 1 份滚动版本，保留一周前的代码 | `backups/bots/bots-weekly.zip` |
+| **BOT** | 每周覆盖 1 份滚动版本，保留一周前的代码 | `backups/bots/bots-weekly.zip`（含 `sync/memory` 记忆） |
 | **skills** | 每次运行都新建，保留所有历史版本 | `backups/skills/skills-YYYY-MM-DD-HHmmss.zip` |
 | **plugins** | 保留 1 份上一版本（profile 配置 + dsh-config） | `backups/plugins/plugins-prev.zip` |
 

@@ -11,12 +11,48 @@ $zhouJson = Join-Path $reportDir 'zhou-ge-latest.json'
 $auditJson = Join-Path $reportDir 'liu-ge-latest.json'
 $logFile = Join-Path $logDir 'liu-ge.log'
 $stateFile = Join-Path $logDir 'liu-ge-state.json'
+$memoryDir = Join-Path $root '..\memory'
+if (-not (Test-Path $memoryDir)) { $memoryDir = Join-Path $root 'memory' }
+$memoryFile = Join-Path $memoryDir 'zhou-memory.json'
+New-Item -ItemType Directory -Force $memoryDir | Out-Null
 $node = Join-Path $env:LOCALAPPDATA 'Programs\DeepSeek Harness\DeepSeek Harness.exe'
 $zhouAnalyzer = Join-Path $root '..\tools\zhou-ge-analyze.mjs'
 $auditor = Join-Path $root '..\tools\liu-ge-audit.mjs'
 
 function Log([string]$msg) {
   Add-Content -Path $logFile -Value ("[{0}] {1}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $msg) -Encoding utf8
+}
+
+function Save-ZhouMemory($finding, [bool]$agree) {
+  $mem = @{ owner = '周哥'; updated = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); entries = @{} }
+  if (Test-Path $memoryFile) {
+    try {
+      $old = Get-Content $memoryFile -Raw -Encoding UTF8 | ConvertFrom-Json
+      if ($old.entries) { $old.entries.PSObject.Properties | ForEach-Object { $mem.entries[$_.Name] = $_.Value } }
+    } catch {}
+  }
+  $pattern = [string]$finding.pattern
+  if (-not $pattern) { $pattern = ([string]$finding.zhouKey -split ':')[0] }
+  $entry = $mem.entries[$pattern]
+  if (-not $entry) {
+    $entry = [pscustomobject]@{ count = 0; agreed = $false; last = ''; session = ''; zhouMessage = ''; judgment = '' }
+  }
+  $entry.count = [int]$entry.count + 1
+  $entry.agreed = $agree
+  $entry.last = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+  $entry.session = [string]$finding.sessionId
+  $entry.zhouMessage = [string]$finding.zhouMessage
+  $entry.judgment = if ($agree) { '刘哥判断正确：周哥本次为误报' } else { '用户不同意刘哥判断' }
+  $mem.entries[$pattern] = $entry
+  $mem | ConvertTo-Json -Depth 6 | Set-Content $memoryFile -Encoding utf8
+
+  $rows = @('# 周哥的小脑袋瓜', '', '> 周哥（刘哥下属）记录刘哥复核结论；同意后才用于抑制同类误报。', '', '| 模式 | 次数 | 结论 | 最近 |', '|---|---:|---|---|')
+  foreach ($k in $mem.entries.Keys) {
+    $e = $mem.entries[$k]
+    $rows += ("| {0} | {1} | {2} | {3} |" -f $k, $e.count, $e.judgment, $e.last)
+  }
+  Set-Content (Join-Path $memoryDir '周哥的小脑袋瓜.md') ($rows -join "`n") -Encoding utf8
+  Log ("memory pattern={0} agree={1} count={2}" -f $pattern, $agree, $entry.count)
 }
 
 function Run-Node([string]$script, [string[]]$arguments) {
@@ -38,7 +74,7 @@ try {
   if (-not (Test-Path $node)) { Log 'node missing'; exit 1 }
   $code = Run-Node $zhouAnalyzer @('--minutes=30', "--out=$zhouJson")
   if ($code -ne 0) { Log "zhou analyzer failed $code"; exit 1 }
-  $code = Run-Node $auditor @("--report=$zhouJson", "--out=$auditJson")
+  $code = Run-Node $auditor @("--report=$zhouJson", "--out=$auditJson", "--memory=$memoryFile")
   if ($code -ne 0) { Log "audit failed $code"; exit 1 }
 
   if (-not (Test-Path $auditJson)) { Log 'no audit'; exit 1 }
@@ -66,8 +102,16 @@ try {
   $state | ConvertTo-Json | Set-Content $stateFile -Encoding utf8
 
   $text = @()
+  $severeCount = @($show | Where-Object { $_.severe }).Count
+  if ($severeCount -gt 0) {
+    $text += '【重复误报 · 严厉纠偏】'
+    $text += ('周哥，同一个判断你已经犯过 ' + $severeCount + ' 次。刘哥提醒不是建议，是纠偏；下次先查记忆再弹窗。')
+    $text += ''
+  }
   foreach ($a in $show | Select-Object -First 5) {
-    $text += ('【误报】' + $a.title)
+    $tag = if ($a.severe) { '【再次误报】' } else { '【误报】' }
+    $text += ($tag + $a.title)
+    if ($a.repeatCount -gt 0) { $text += ('记忆：同类已被纠正 ' + $a.repeatCount + ' 次，仍再次出现。') }
     $text += ('周哥说：' + $a.zhouMessage)
     $text += ('周哥的问题：' + $a.problem)
     $text += ('会话为什么没问题：' + $a.whyFine)
@@ -89,6 +133,7 @@ try {
 
   if ($NoToast) { Write-Output $body; exit 0 }
 
+  $script:liuShow = $show
   Add-Type -AssemblyName System.Windows.Forms
   Add-Type -AssemblyName System.Drawing
 
@@ -99,7 +144,7 @@ try {
   $form.TopMost = $true
   $form.ShowInTaskbar = $false
   $form.Width = 640
-  $form.Height = 460
+  $form.Height = 500
   $form.BackColor = [System.Drawing.Color]::FromArgb(20, 24, 28)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
   $wa = $screen.WorkingArea
@@ -139,14 +184,54 @@ try {
   $box.BackColor = $form.BackColor
   $box.ForeColor = [System.Drawing.Color]::FromArgb(220, 230, 238)
   $box.Font = New-Object System.Drawing.Font('Microsoft YaHei', 10.5)
-  $box.Left = 20; $box.Top = 56; $box.Width = 600; $box.Height = 380
+  $box.Left = 20; $box.Top = 56; $box.Width = 600; $box.Height = 300
   $form.Controls.Add($box)
+
+  $choiceLabel = New-Object System.Windows.Forms.Label
+  $choiceLabel.Text = '刘哥判断是否正确？关闭时记录到「周哥的小脑袋瓜」：'
+  $choiceLabel.ForeColor = [System.Drawing.Color]::FromArgb(190, 205, 215)
+  $choiceLabel.Font = New-Object System.Drawing.Font('Microsoft YaHei', 9)
+  $choiceLabel.Left = 20; $choiceLabel.Top = 362; $choiceLabel.Width = 590; $choiceLabel.Height = 22
+  $form.Controls.Add($choiceLabel)
+
+  $script:liuAgree = New-Object System.Windows.Forms.CheckBox
+  $script:liuAgree.Text = '同意（刘哥判断正确，记入周哥记忆）'
+  $script:liuAgree.ForeColor = [System.Drawing.Color]::FromArgb(150, 220, 190)
+  $script:liuAgree.Font = New-Object System.Drawing.Font('Microsoft YaHei', 9.5)
+  $script:liuAgree.Left = 20; $script:liuAgree.Top = 388; $script:liuAgree.Width = 300; $script:liuAgree.Height = 28
+  $script:liuAgree.BackColor = $form.BackColor
+  $form.Controls.Add($script:liuAgree)
+
+  $script:liuDisagree = New-Object System.Windows.Forms.CheckBox
+  $script:liuDisagree.Text = '不同意（周哥判断仍成立）'
+  $script:liuDisagree.ForeColor = [System.Drawing.Color]::FromArgb(230, 190, 150)
+  $script:liuDisagree.Font = New-Object System.Drawing.Font('Microsoft YaHei', 9.5)
+  $script:liuDisagree.Left = 330; $script:liuDisagree.Top = 388; $script:liuDisagree.Width = 260; $script:liuDisagree.Height = 28
+  $script:liuDisagree.BackColor = $form.BackColor
+  $form.Controls.Add($script:liuDisagree)
+
+  $script:liuAgree.Add_CheckedChanged({
+    if ($script:liuAgree.Checked -and $script:liuDisagree.Checked) { $script:liuDisagree.Checked = $false }
+  })
+  $script:liuDisagree.Add_CheckedChanged({
+    if ($script:liuDisagree.Checked -and $script:liuAgree.Checked) { $script:liuAgree.Checked = $false }
+  })
 
   $script:liuConfirmed = $false
   $script:liuConfirming = $false
   $form.Add_FormClosing({
     param($sender, $e)
     if ($script:liuConfirmed) { return }
+    if (-not $script:liuAgree.Checked -and -not $script:liuDisagree.Checked) {
+      [System.Windows.Forms.MessageBox]::Show(
+        '请先勾选「同意」或「不同意」，再关闭。',
+        '刘哥 · 记录判断',
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Information
+      ) | Out-Null
+      $e.Cancel = $true
+      return
+    }
     $e.Cancel = $true
     if ($script:liuConfirming) { return }
     $script:liuConfirming = $true
@@ -199,6 +284,8 @@ try {
       $res = $dlg.ShowDialog($form)
       $dlg.Dispose()
       if ($res -eq [System.Windows.Forms.DialogResult]::OK) {
+        $agree = [bool]$script:liuAgree.Checked
+        foreach ($a in $script:liuShow) { Save-ZhouMemory $a $agree }
         $script:liuConfirmed = $true
         $form.Close()
       }

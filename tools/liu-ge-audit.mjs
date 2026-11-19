@@ -4,6 +4,7 @@ import path from 'node:path';
 const args = process.argv.slice(2);
 const reportPath = args.find((a) => a.startsWith('--report='))?.split('=')[1] || '';
 const outPath = args.find((a) => a.startsWith('--out='))?.split('=')[1] || '';
+const memoryPath = args.find((a) => a.startsWith('--memory='))?.split('=')[1] || '';
 if (!reportPath || !fs.existsSync(reportPath)) {
   console.error('missing report');
   process.exit(1);
@@ -12,8 +13,19 @@ if (!reportPath || !fs.existsSync(reportPath)) {
 const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
 const sessions = new Map((report.sessions || []).map((s) => [s.id, s]));
 const findings = [];
+let memory = {};
+if (memoryPath && fs.existsSync(memoryPath)) {
+  try { memory = JSON.parse(fs.readFileSync(memoryPath, 'utf8')).entries || {}; } catch {}
+}
+function patternOf(key) { return String(key || '').split(':')[0]; }
+function memoryInfo(key) {
+  const p = patternOf(key);
+  const e = memory[p];
+  return e ? { pattern: p, repeatCount: Number(e.count || 0), agreed: !!e.agreed, last: e.last || '' } : { pattern: p, repeatCount: 0, agreed: false, last: '' };
+}
 
 function add(alert, problem, whyFine, advice) {
+  const mem = memoryInfo(alert.key);
   findings.push({
     zhouKey: alert.key,
     sessionId: alert.sessionId,
@@ -23,6 +35,9 @@ function add(alert, problem, whyFine, advice) {
     problem,
     whyFine,
     advice,
+    pattern: mem.pattern,
+    repeatCount: mem.repeatCount,
+    severe: mem.repeatCount > 0 && mem.agreed,
   });
 }
 

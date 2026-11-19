@@ -40,6 +40,30 @@ try {
     exit 0
   }
 
+  # 周哥的小脑袋瓜：刘哥已确认的误报不再重复弹
+  $memoryDir = Join-Path $root '..\memory'
+  if (-not (Test-Path $memoryDir)) { $memoryDir = Join-Path $root 'memory' }
+  $memoryFile = Join-Path $memoryDir 'zhou-memory.json'
+  $memory = @{}
+  if (Test-Path $memoryFile) {
+    try {
+      $m = Get-Content $memoryFile -Raw -Encoding UTF8 | ConvertFrom-Json
+      if ($m.entries) { $m.entries.PSObject.Properties | ForEach-Object { $memory[$_.Name] = $_.Value } }
+    } catch {}
+  }
+  $kept = @()
+  foreach ($a in $alerts) {
+    $pattern = ([string]$a.key -split ':')[0]
+    $mem = $memory[$pattern]
+    if ($mem -and $mem.agreed -and [int]$mem.count -gt 0 -and [string]$mem.session -eq [string]$a.sessionId) {
+      Log ("memory suppress pattern={0} key={1}" -f $pattern, $a.key)
+      continue
+    }
+    $kept += $a
+  }
+  $alerts = $kept
+  if ($alerts.Count -eq 0) { Log 'all suppressed by memory'; exit 0 }
+
   $state = @{}
   if (Test-Path $stateFile) {
     try {

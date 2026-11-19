@@ -51,6 +51,10 @@ function Make-Zip($files, [string]$dest, [string]$label) {
 function Backup-Bots {
   $files = Get-ChildItem $botRoot -File -ErrorAction SilentlyContinue |
     Where-Object { $_.Extension -in @('.ps1', '.cmd', '.md', '.json') -and $_.Name -ne 'repair-push.ps1' }
+  $memoryDir = Join-Path $botRoot 'memory'
+  if (Test-Path $memoryDir) {
+    $files += Get-ChildItem $memoryDir -File -ErrorAction SilentlyContinue
+  }
   $dest = Join-Path $botBackupDir 'bots-weekly.zip'
   Make-Zip $files $dest 'bots（保留 1 份滚动版本）'
   if ($Apply) {
