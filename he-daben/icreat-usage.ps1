@@ -24,7 +24,7 @@ function Show-Toast([string]$title, [string]$text) {
   $form.TopMost = $true
   $form.ShowInTaskbar = $false
   $form.Width = 560
-  $form.Height = 300
+  $form.Height = 340
   Set-DshCardStyle $form ([System.Drawing.Color]::FromArgb(80, 170, 140))
   $form.BackColor = [System.Drawing.Color]::FromArgb(22, 26, 30)
   $screen = [System.Windows.Forms.Screen]::PrimaryScreen
@@ -64,8 +64,13 @@ function Show-Toast([string]$title, [string]$text) {
   $box.BackColor = $form.BackColor
   $box.ForeColor = [System.Drawing.Color]::FromArgb(220, 235, 230)
   $box.Font = New-Object System.Drawing.Font('Microsoft YaHei', 11)
-  $box.Left = 20; $box.Top = 58; $box.Width = 520; $box.Height = 220
+  $box.Left = 20; $box.Top = 58; $box.Width = 520; $box.Height = 260
   $form.Controls.Add($box)
+  $form.Add_Shown({
+    $box.SelectionStart = 0
+    $box.SelectionLength = 0
+    $box.ScrollToCaret()
+  })
 
   [System.Windows.Forms.Application]::Run($form)
   $form.Dispose()
@@ -195,6 +200,15 @@ try {
     $lines += ("{0} USD {1:N3} / {2} 次" -f $labels[$i], $usd, $rec.count)
   }
   $lines += ("3日合计 USD {0:N3} / {1} 次" -f $total3, $count3)
+  if ($dsh) {
+    $lines += ''
+    $lines += ("DSH 今日 {0:N0} tokens / {1} 条" -f [double]$dsh.today.tokens, [double]$dsh.today.messages)
+    $lines += ("DSH 本周 {0:N0} tokens" -f [double]$dsh.week.tokens)
+    $lines += ("DSH 本月 {0:N0} tokens" -f [double]$dsh.month.tokens)
+  } else {
+    $lines += ''
+    $lines += 'DSH 用量读取失败'
+  }
 
   $text = $lines -join "`n"
   $report = [pscustomobject]@{
@@ -215,7 +229,7 @@ try {
   $report | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $reportDir 'icreat-latest.json') -Encoding utf8
   $text | Set-Content (Join-Path $reportDir 'icreat-latest.txt') -Encoding utf8
 
-  Show-Toast '何大奔 · iCreat 用量' $text
+  Show-Toast '何大奔 · iCreat + DSH 用量' $text
   Write-Host $text
   exit 0
 } catch {

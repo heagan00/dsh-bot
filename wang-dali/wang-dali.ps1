@@ -1,4 +1,4 @@
-param(
+﻿param(
   [switch]$Test,
   [int]$TestCount = 1,
   [int]$TestSeconds = 6
@@ -175,7 +175,7 @@ function Show-Tip {
   $speak.ForeColor = [System.Drawing.Color]::FromArgb(245, 210, 170)
   $speak.BackColor = [System.Drawing.Color]::FromArgb(52, 42, 34)
   $speak.Font = New-Object System.Drawing.Font('Microsoft YaHei', 9)
-  $speak.Left = 330; $speak.Top = 10; $speak.Width = 76; $speak.Height = 26
+  $speak.Left = 320; $speak.Top = 10; $speak.Width = 104; $speak.Height = 26
   $form.Controls.Add($speak)
 
   $close = New-Object System.Windows.Forms.Button
@@ -185,7 +185,7 @@ function Show-Tip {
   $close.ForeColor = [System.Drawing.Color]::FromArgb(180, 160, 140)
   $close.BackColor = $form.BackColor
   $close.Font = New-Object System.Drawing.Font('Microsoft YaHei', 14)
-  $close.Left = 420; $close.Top = 8; $close.Width = 28; $close.Height = 28
+  $close.Left = 428; $close.Top = 8; $close.Width = 28; $close.Height = 28
   $close.Add_Click({ $form.Close() })
   $form.Controls.Add($close)
 
