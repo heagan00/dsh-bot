@@ -62,6 +62,16 @@ prompt-library/
 
 索引：`prompt-library/index.md`、`index.json`。
 
+## 高频词猜词
+
+```cmd
+node tools\prompt-guess.mjs --text="做一个卡通宝箱图标"
+```
+
+输出：候选分类、命中词、建议补充的维度。用于先把模糊提示词猜到一个一级分类，再细分类。
+
+`index.json` 同时保存分类计数和 top 高频词；分类采用加权命中，不是“第一个关键词命中就归类的单规则”。
+
 ## Wildcards
 
 参考 AUTOMATIC1111 wildcards 扩展的机制复现：

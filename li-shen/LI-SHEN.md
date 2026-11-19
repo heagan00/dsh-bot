@@ -17,7 +17,7 @@
 
 | 对象 | 规则 | 路径 |
 |---|---|---|
-| **BOT** | 每周覆盖 1 份滚动版本，保留一周前的代码 | `backups/bots/bots-weekly.zip`（含 `sync/memory` 记忆） |
+| **BOT** | 每周覆盖 1 份滚动版本，保留一周前的代码 | `backups/bots/bots-weekly.zip` |
 | **skills** | 每次运行都新建，保留所有历史版本 | `backups/skills/skills-YYYY-MM-DD-HHmmss.zip` |
 | **plugins** | 保留 1 份上一版本（profile 配置 + dsh-config） | `backups/plugins/plugins-prev.zip` |
 
@@ -36,6 +36,8 @@
 
 ## 绝对不清理
 
+- `prompt-library/`（提示词库）——**李婶无权处理**
+- `sync/memory/`（周哥的小脑袋瓜）——**李婶无权处理**
 - `sync/audio/`、`sync/voice/`（BGM/语音资产）
 - `sync/reports/latest.md`、`icreat-latest.*`
 - `sync/logs/wang-dali-state.json`（提醒间隔状态）

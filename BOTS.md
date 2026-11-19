@@ -21,6 +21,7 @@
 - 都走 Windows 计划任务，不依赖 DSH 在线，不需要逐次授权。
 - 登录态、Cookie、token 只在本机，不进 Git。
 - 大文件/语音缓存按需放本机；当前王大力 MP3/BGM 已随仓库同步。
+- 李婶**无权**处理 `prompt-library/` 和 `sync/memory/`；只清理缓存与备份 BOT/skills/plugins。
 - 任务为 Interactive only：PC 开机且已登录才运行。
 
 > 所有弹窗（含 ×）都必须由 heagan00 手动点击，BOT 不会自动关闭；刘哥关闭还需二次确认。

@@ -115,16 +115,18 @@ function Show-Card([string]$title, [string]$body, [string[]]$buttons) {
   foreach ($b in $buttons) {
     $btn = New-Object System.Windows.Forms.Button
     $btn.Text = $b
-    $btn.Left = $x; $btn.Top = 390; $btn.Width = 110; $btn.Height = 34
+    $btnWidth = [Math]::Max(100, 28 + ([int]$b.Length * 16))
+    $btn.Left = $x; $btn.Top = 390; $btn.Width = $btnWidth; $btn.Height = 34
     $btn.UseVisualStyleBackColor = $false
     $btn.BackColor = if ($b -in @('要', '优化提示词', '换一组')) { [System.Drawing.Color]::FromArgb(190, 150, 90) } else { [System.Drawing.Color]::FromArgb(58, 58, 66) }
     $btn.ForeColor = if ($b -in @('要', '优化提示词', '换一组')) { [System.Drawing.Color]::FromArgb(30, 22, 12) } else { [System.Drawing.Color]::FromArgb(235, 235, 240) }
     $btn.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+    $btn.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
     $btn.Font = New-Object System.Drawing.Font('Microsoft YaHei', 9.5)
     $btn.Tag = $b
     $btn.Add_Click({ $script:pieterChoice = $this.Tag; $script:pieterForm.Close() })
     $form.Controls.Add($btn)
-    $x += 118
+    $x += $btnWidth + 8
   }
 
   $script:pieterChoice = '关闭'
