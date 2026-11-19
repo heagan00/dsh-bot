@@ -4,6 +4,12 @@ import os from 'node:os';
 
 const args = process.argv.slice(2);
 const text = args.find((a) => a.startsWith('--text='))?.split('=')[1] || '';
+const ime = args.find((a) => a.startsWith('--ime='))?.split('=')[1] || '';
+const force = args.includes('--force');
+if (ime !== 'en' && !force) {
+  console.error('high-frequency guess is only shown with English input method');
+  process.exit(2);
+}
 const root = path.join(os.homedir(), 'Downloads', 'ComfyUI相关', 'prompt-library');
 const indexPath = path.join(root, 'index.json');
 

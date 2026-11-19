@@ -70,11 +70,15 @@ prompt-library/
 
 ## 高频词猜词
 
+只在**英文输入法**下出现；中文输入法直接跳过。
+
 ```cmd
-node tools\prompt-guess.mjs --text="做一个卡通宝箱图标"
+powershell.exe -NoProfile -File "sync\prompt-guess.ps1" -Text="做一个卡通宝箱图标"
 ```
 
 输出：候选分类、命中词、建议补充的维度。用于先把模糊提示词猜到一个一级分类，再细分类。
+
+测试时可加 `-Force` 强制运行；直接跑 Node 需要 `--ime=en`。
 
 `index.json` 同时保存分类计数和 top 高频词；分类采用加权命中，不是“第一个关键词命中就归类的单规则”。
 
