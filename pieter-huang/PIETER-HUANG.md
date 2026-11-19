@@ -24,6 +24,21 @@
 - **否**：关闭
 - **30分钟内不再出现**：该会话静音 30 分钟
 
+## 输入框实时监听
+
+不是等消息发送后才触发。
+
+登录后自动启动 `sync/pieter-input-watch.ps1`，每 400ms 读取 DSH 输入框；一检测到 `@阿皮` 就立即弹 `皮特·黄 · 传唤` 子菜单。
+
+启动方式（当前用户启动项，无需管理员）：
+
+```text
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+PieterInputWatch = "C:\Users\EDY\Downloads\ComfyUI相关\sync\pieter-input-watch.cmd"
+```
+
+输入框里的 `@阿皮` 被清空/删掉后才会重新待命，避免连续弹。
+
 ## @阿皮
 
 提示词里出现 `@阿皮` 时，直接弹子菜单：

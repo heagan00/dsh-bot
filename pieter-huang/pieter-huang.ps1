@@ -1,5 +1,7 @@
 ﻿param(
-  [switch]$Test
+  [switch]$Test,
+  [switch]$ForceMention,
+  [string]$Prompt = ''
 )
 
 $ErrorActionPreference = 'Continue'
@@ -204,8 +206,25 @@ function Show-Atu([string]$prompt) {
 function Start-Employee([string]$file, [string]$prompt) {
   $p = Join-Path $root $file
   if (-not (Test-Path $p)) { return $false }
-  Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-File', $p, '-Prompt', $prompt) -WindowStyle Minimized
+  $quoted = '"' + ($prompt -replace '"', '\"') + '"'
+  Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-File', $p, '-Prompt', $quoted) -WindowStyle Minimized
   return $true
+}
+
+function Show-ApiMenu([string]$prompt) {
+  $choice = Show-Card '皮特·黄 · 传唤' ('官家，@阿皮 已候旨。要传哪位？' + "`r`n`r`n原文：" + (Clean-Prompt $prompt)) @('优化提示词', '阿美', '阿威', '阿秃', '取消')
+  switch ($choice) {
+    '优化提示词' { Show-Optimize $prompt }
+    '阿美' { if (-not (Start-Employee 'amei.ps1' $prompt)) { Show-Amei $prompt } }
+    '阿威' { if (-not (Start-Employee 'awei.ps1' $prompt)) { Show-Awei $prompt } }
+    '阿秃' { if (-not (Start-Employee 'atu.ps1' $prompt)) { Show-Atu $prompt } }
+  }
+}
+
+if ($ForceMention) {
+  if (-not $Prompt) { try { $Prompt = (Get-Clipboard -Raw) } catch {} }
+  Show-ApiMenu ([string]$Prompt)
+  exit 0
 }
 
 if ($Test) {
@@ -242,13 +261,7 @@ $state.processed[$alert.id] = $true
 $state | ConvertTo-Json -Depth 5 | Set-Content $stateFile -Encoding utf8
 
 if ($alert.mention) {
-  $choice = Show-Card '皮特·黄 · 传唤' ('官家，@阿皮 已候旨。要传哪位？' + "`r`n`r`n原文：" + (Clean-Prompt $alert.text)) @('优化提示词', '阿美', '阿威', '阿秃', '取消')
-  switch ($choice) {
-    '优化提示词' { Show-Optimize $alert.text }
-    '阿美' { if (-not (Start-Employee 'amei.ps1' $alert.text)) { Show-Amei $alert.text } }
-    '阿威' { if (-not (Start-Employee 'awei.ps1' $alert.text)) { Show-Awei $alert.text } }
-    '阿秃' { if (-not (Start-Employee 'atu.ps1' $alert.text)) { Show-Atu $alert.text } }
-  }
+  Show-ApiMenu $alert.text
 } else {
   $choice = Show-Card '皮特·黄 · 秉笔太监' ('官家，需要秉笔太监皮特·黄为您整理提示词吗？' + "`r`n`r`n原文：" + (Clean-Prompt $alert.text)) @('要', '否', '30分钟内不再出现')
   if ($choice -eq '要') { Show-Optimize $alert.text }
