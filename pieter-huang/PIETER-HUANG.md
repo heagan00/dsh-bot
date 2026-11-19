@@ -28,7 +28,7 @@
 
 不是等消息发送后才触发。
 
-登录后自动启动 `sync/pieter-input-watch.ps1`，每 400ms 读取 DSH 输入框；一检测到 `@阿皮` 就立即弹 `皮特·黄 · 传唤` 子菜单。
+登录后自动启动 `sync/pieter-input-watch.ps1`，每 400ms 读取 DSH 输入框；一检测到 `@阿皮` 就立即弹 `DSH BOT Staff · 协同` 菜单。
 
 启动方式（当前用户启动项，无需管理员）：
 
@@ -60,7 +60,7 @@ PieterInputWatch = "C:\Users\EDY\Downloads\ComfyUI相关\sync\pieter-input-watch
 - 阿秃：`sync/atu.ps1` → `sync/memory/atu-memory.json`
 - 阿音：`sync/ayin.ps1` → `sync/memory/ayin-memory.json`
 
-它们不会各自起空白定时器；只在被传唤时工作，避免空转占算力。
+它们不会各自起空白定时器；只在被请来协作时工作，避免空转占算力。
 
 ## 每日提示词库
 
@@ -117,3 +117,5 @@ schtasks /Run /TN "皮特·黄 · 长提示词检查"
 schtasks /Run /TN "皮特·黄 · 每日提示词库"
 powershell.exe -NoProfile -STA -File "sync\pieter-huang.ps1" -Test
 ```
+
+

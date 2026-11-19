@@ -212,7 +212,7 @@ function Start-Employee([string]$file, [string]$prompt) {
 }
 
 function Show-ApiMenu([string]$prompt) {
-  $choice = Show-Card '皮特·黄 · 传唤' ('官家，@阿皮 已候旨。要传哪位？' + "`r`n`r`n原文：" + (Clean-Prompt $prompt)) @('优化提示词', '阿美', '阿威', '阿秃', '阿音', '取消')
+  $choice = Show-Card 'DSH BOT Staff · 协同' ('官家，@阿皮 已就位。要请哪位同僚协作？' + "`r`n`r`n原文：" + (Clean-Prompt $prompt)) @('优化提示词', '阿美', '阿威', '阿秃', '阿音', '取消')
   switch ($choice) {
     '优化提示词' { Show-Optimize $prompt }
     '阿美' { if (-not (Start-Employee 'amei.ps1' $prompt)) { Show-Amei $prompt } }
@@ -271,3 +271,4 @@ if ($alert.mention) {
     $state | ConvertTo-Json -Depth 5 | Set-Content $stateFile -Encoding utf8
   }
 }
+
