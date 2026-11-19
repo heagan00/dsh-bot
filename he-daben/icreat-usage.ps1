@@ -178,6 +178,43 @@ try {
     }
   } catch {}
 
+  # 人民币日消耗：用平台累计消耗做日切差分；首次运行只建立基线
+  $cnyStateFile = Join-Path $reportDir 'dsh-cny-state.json'
+  $todayKey = $now.ToString('yyyy-MM-dd')
+  $todayCny = 0.0
+  $hasCnyBaseline = $false
+  $cnyState = $null
+  if ($dshCny) {
+    if (Test-Path $cnyStateFile) {
+      try { $cnyState = Get-Content $cnyStateFile -Raw -Encoding utf8 | ConvertFrom-Json } catch {}
+    }
+    $dayStart = $dshCny.totalCost
+    if ($cnyState) {
+      if ([string]$cnyState.date -eq $todayKey) {
+        $dayStart = [double]$cnyState.dayStartTotal
+      } else {
+        $dayStart = [double]$cnyState.totalCost
+      }
+      $hasCnyBaseline = $true
+    }
+    $todayCny = [Math]::Max(0, $dshCny.totalCost - $dayStart)
+    $history = @{}
+    if ($cnyState -and $cnyState.history) {
+      $cnyState.history.PSObject.Properties | ForEach-Object { $history[$_.Name] = [double]$_.Value }
+    }
+    $history[$todayKey] = $todayCny
+    [pscustomobject]@{
+      date = $todayKey
+      dayStartTotal = $dayStart
+      totalCost = $dshCny.totalCost
+      balance = $dshCny.balance
+      todayCny = $todayCny
+      updated = $now.ToString('o')
+      history = $history
+    } | ConvertTo-Json -Depth 5 | Set-Content $cnyStateFile -Encoding utf8
+  }
+  $todayCnyLabel = if ($hasCnyBaseline) { ("¥{0:N2}" -f $todayCny) } else { ("¥{0:N2}（首日基线）" -f $todayCny) }
+
   $usageLines = @(
     '# 何大奔 · 用量报表',
     '',
@@ -201,6 +238,7 @@ try {
     $usageLines += '- DSH 用量读取失败；检查 ~/.dsh/sessions。'
   }
   if ($dshCny) {
+    $usageLines += ('- 今日消耗：{0}' -f $todayCnyLabel)
     $usageLines += ('- 人民币余额：¥{0:N2}' -f $dshCny.balance)
     $usageLines += ('- 账户累计消耗：¥{0:N2}' -f $dshCny.totalCost)
   } else {
@@ -240,6 +278,7 @@ try {
     $lines += 'DSH 用量读取失败'
   }
   if ($dshCny) {
+    $lines += ("DSH 今日消耗 {0}" -f $todayCnyLabel)
     $lines += ("DSH 人民币余额 ¥{0:N2}" -f $dshCny.balance)
     $lines += ("DSH 累计消耗 ¥{0:N2}" -f $dshCny.totalCost)
   } else {

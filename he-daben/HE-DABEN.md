@@ -5,7 +5,7 @@
 | 名字 | 何大奔 |
 | 岗位 | iCreat API 用量分析师 |
 | 上班 | 每天 **07:00** |
-| 输出 | 弹窗：iCreat 余额/3 日 + DSH 今日/本周/本月 token；另出周报/月报 |
+| 输出 | 弹窗：iCreat 余额/3 日 + DSH 今日消耗/余额/累计；另出周报/月报 |
 | 数据源 | `~/.icreat/token.txt` → iCreat 控制台 API；DSH `~/.dsh/sessions` |
 | 脚本 | `sync/icreat-usage.ps1`、`sync/he-daben-report.cmd` |
 | 计划任务 | `何大奔 · iCreat 用量提醒`（07:00）、`何大奔 · 用量周报月报`（07:10） |
