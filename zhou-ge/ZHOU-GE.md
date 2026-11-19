@@ -4,13 +4,29 @@
 |---|---|
 | 名字 | 周哥 |
 | 岗位 | 全栈工程师 / 主程 |
-| 频率 | **每 5 分钟** |
+| 频率 | 每 5 分钟唤起，**仅在有正在回答的对话时真正巡检** |
 | 任务名 | `周哥 · 全栈主程巡检` |
 | 检查范围 | `~/.dsh/sessions` 中最近 30 分钟活跃的会话 |
 | 分析器 | `tools/zhou-ge-analyze.mjs` |
-| UI | `sync/zhou-ge.ps1`（主屏上方中间，红色=算力警报） |
-| 报告 | `sync/reports/zhou-ge-latest.md` / `.json` |
-| 日志 | `sync/logs/zhou-ge.log` |
+| UI | `zhou-ge/zhou-ge.ps1`（主屏上方中间，红色=算力警报） |
+| 报告 | `zhou-ge/reports/zhou-ge-latest.md` / `.json` |
+| 日志 | `zhou-ge/logs/zhou-ge.log` |
+
+## 启动条件
+
+计划任务每 5 分钟唤起一次，但周哥不会无条件巡检。脚本自己有两道门，任一不满足就直接退出：
+
+1. **没有会话写入**：`~/.dsh/sessions` 下最近 `-IdleAfter`（默认 10）分钟没有任何 `session.*.jsonl.zstd` 被写过 → 直接退出，连分析器都不启动。
+2. **没有正在回答的对话**：有会话在动，但所有 `turn/start` 都已收平 `turn/end`（没有未收尾的 turn）→ 读档后退出，不弹窗、不写报告、不叫刘哥。
+
+只有「一个 turn 已经开问、还没答完」时，周哥才真正巡检。没人对话的时候，它不占算力、不写报告、不打扰。
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `-IdleAfter` | 10 | 多少分钟没有会话写入就认定没人 |
+| `-SessionsRoot` | `~/.dsh/sessions` | 会话库位置（测试/夹具用） |
+| `-Force` | 关 | 跳过这两道门，强制巡检一次 |
+| `-NoToast` | 关 | 只输出文本，不弹窗、不叫刘哥 |
 
 ## 优先级
 
@@ -32,14 +48,18 @@
 
 - 高优先级 20 分钟内不重复；普通建议 30 分钟内不重复。
 - 没有发现问题时**不弹窗**，只写日志。
+- 没有正在回答的对话时**不启动**（见「启动条件」）。
 - 全局 mutex，避免两个巡检实例同时弹。
 
 ## 手动
 
 ```cmd
 schtasks /Run /TN "周哥 · 全栈主程巡检"
-powershell.exe -NoProfile -STA -File "sync\zhou-ge.ps1" -NoToast
+powershell.exe -NoProfile -STA -File "zhou-ge\zhou-ge.ps1" -NoToast
+powershell.exe -NoProfile -STA -File "zhou-ge\zhou-ge.ps1" -Force -NoToast
 ```
+
+最后一条 `-Force` 是「现在没有正在回答的对话，但我想强制查一次」。默认不带 `-Force` 时，没有进行中的对话就直接返回。
 
 ## 边界
 
@@ -49,8 +69,8 @@ powershell.exe -NoProfile -STA -File "sync\zhou-ge.ps1" -NoToast
 
 周哥是刘哥下属。刘哥弹窗中你勾选“同意”，并在二次确认里关闭后，周哥会把“这是误报”的记录写入：
 
-- `sync/memory/zhou-memory.json`
-- `sync/memory/周哥的小脑袋瓜.md`
+- `memory/zhou-memory.json`
+- `memory/周哥的小脑袋瓜.md`
 
 之后同一会话、同一模式的提醒会被周哥直接抑制，不再重复弹。若未抑制成功而再次出现，刘哥会严厉纠偏。
 

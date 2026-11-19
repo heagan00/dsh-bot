@@ -6,6 +6,7 @@ import zlib from 'node:zlib';
 const args = process.argv.slice(2);
 const windowMinutes = Number(args.find((a) => a.startsWith('--minutes='))?.split('=')[1] || 15);
 const outArg = args.find((a) => a.startsWith('--out='))?.split('=')[1] || '';
+const rootArg = args.find((a) => a.startsWith('--root='))?.split('=')[1] || '';
 const now = Date.now();
 const cutoff = now - windowMinutes * 60 * 1000;
 
@@ -41,7 +42,7 @@ function textOf(content) {
   return content.filter((x) => x && x.type === 'text').map((x) => x.text || '').join('\n');
 }
 
-const root = path.join(os.homedir(), '.dsh', 'sessions');
+const root = rootArg || path.join(os.homedir(), '.dsh', 'sessions');
 const files = walk(root).filter((f) => fs.statSync(f).mtimeMs >= cutoff);
 const sessions = [];
 const alerts = [];

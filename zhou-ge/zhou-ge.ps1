@@ -1,5 +1,8 @@
-﻿param(
-  [switch]$NoToast
+param(
+  [switch]$NoToast,
+  [switch]$Force,
+  [int]$IdleAfter = 10,
+  [string]$SessionsRoot = ''
 )
 
 $ErrorActionPreference = 'Continue'
@@ -13,6 +16,7 @@ $logFile = Join-Path $logDir 'zhou-ge.log'
 $stateFile = Join-Path $logDir 'zhou-ge-state.json'
 $node = Join-Path $env:LOCALAPPDATA 'Programs\DeepSeek Harness\DeepSeek Harness.exe'
 $analyzer = Join-Path $root '..\tools\zhou-ge-analyze.mjs'
+if (-not $SessionsRoot) { $SessionsRoot = Join-Path $env:USERPROFILE '.dsh\sessions' }
 
 function Log([string]$msg) {
   Add-Content -Path $logFile -Value ("[{0}] {1}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $msg) -Encoding utf8
@@ -23,10 +27,23 @@ if (-not $mutex.WaitOne(0)) { exit 0 }
 
 try {
   if (-not (Test-Path $node)) { Log 'DSH node missing'; exit 1 }
+
+  # 没有正在进行的对话 → 周哥不启动。
+  # 第一道：这个窗口内没有任何会话文件被写过，连分析器都不用起。
+  if (-not $Force) {
+    $freshCut = (Get-Date).AddMinutes(-$IdleAfter)
+    $fresh = @(Get-ChildItem -Path $SessionsRoot -Recurse -File -Filter 'session.*.jsonl.zstd' -ErrorAction SilentlyContinue |
+               Where-Object { $_.LastWriteTime -gt $freshCut })
+    if ($fresh.Count -eq 0) {
+      Log ("skip: no session write in {0} min" -f $IdleAfter)
+      exit 0
+    }
+  }
+
   $old = $env:ELECTRON_RUN_AS_NODE
   $env:ELECTRON_RUN_AS_NODE = '1'
   try {
-    $p = Start-Process -FilePath $node -ArgumentList @($analyzer, '--minutes=30', "--out=$jsonFile") -Wait -PassThru -NoNewWindow
+    $p = Start-Process -FilePath $node -ArgumentList @($analyzer, '--minutes=30', "--root=$SessionsRoot", "--out=$jsonFile") -Wait -PassThru -NoNewWindow
     if ($p.ExitCode -ne 0) { Log "analyzer failed $($p.ExitCode)"; exit 1 }
   } finally {
     if ($null -eq $old) { Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue }
@@ -35,6 +52,15 @@ try {
 
   if (-not (Test-Path $jsonFile)) { Log 'no report'; exit 1 }
   $data = Get-Content $jsonFile -Raw -Encoding UTF8 | ConvertFrom-Json
+
+  # 第二道：有会话在动，但没有任何一个 turn 处于「问完了还没答完」的状态 → 同样不启动。
+  $cut = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - ($IdleAfter * 60000)
+  $inflight = @($data.sessions | Where-Object { $_.activeTurn -and ([long]$_.modified -ge $cut) })
+  if (-not $Force -and $inflight.Count -eq 0) {
+    Log ("skip: no conversation answering (sessions={0})" -f $data.activeSessions)
+    exit 0
+  }
+
   $alerts = @($data.alerts)
   if ($alerts.Count -eq 0) {
     Log 'no alerts'
