@@ -4,21 +4,24 @@
 |---|---|
 | 名字 | 王大力 |
 | 岗位 | 心理抚慰师 |
-| 上班 | 每天 **09:00–24:00** |
-| 频率 | 两次提醒间隔 **30–45 分钟**（start-to-start） |
+| 上班 | 计划任务每天 **09:00** 启动；启动即弹，不再等整点 |
+| 频率 | 两次提醒间隔 **90–120 分钟**（start-to-start） |
 | 形式 | 主屏幕左下角卡片 + “朗读”按钮 + 随机 BGM/自然声 |
+| 焦点 | 卡片**不抢焦点**（`WS_EX_NOACTIVATE` + `ShowWithoutActivation`），不打断输入法/全屏程序 |
 | 声线 | **Microsoft Edge TTS `zh-CN-XiaoxiaoNeural`**，成年女性、自然语气，rate −5% |
-| 语音文件 | `sync/voice/tip-01.mp3` … `tip-12.mp3`（本机预生成，不依赖网络） |
-| BGM | `sync/audio/*.wav`；55% 纯音乐 / 45% 自然声，随机起点 |
-| 脚本 | `sync/wang-dali.ps1` |
+| 语音文件 | `voice/tip-01.mp3` … `tip-12.mp3`（本机预生成，不依赖网络） |
+| BGM | `audio/*.wav`；55% 纯音乐 / 45% 自然声，随机起点 |
+| 脚本 | `wang-dali/wang-dali.ps1` |
 | 计划任务 | `王大力 · 心理抚慰师`（每天 09:00） |
 
 ## 提醒逻辑
 
-- 09:00 启动，首次立即提醒；之后按 **30–45 分钟**随机间隔。
-- 用 `sync/logs/wang-dali-state.json` 记录上次提醒时间；任务重启也不会 30 分钟内重复。
+- 任务 09:00 启动，**首次立即提醒**；之后按 **90–120 分钟**随机间隔。
+- 启动后不再等到 09:00 才弹：凌晨或午间手动启动，第一张卡立刻出现。
+- 用 `wang-dali/logs/wang-dali-state.json` 记录上次提醒时间；任务重启也不会 90 分钟内重复。
 - 24:00 自动退出；次日 09:00 再启动。
 - 同时只允许一个实例（全局 mutex）。
+- 卡片用无激活窗口显示：出现在左下角但**不接管键盘焦点**，你正在打字时不会被打断。
 
 ## 语音
 
@@ -30,25 +33,27 @@
 
 ```cmd
 schtasks /Run /TN "王大力 · 心理抚慰师"
-powershell.exe -NoProfile -STA -File "sync\wang-dali.ps1" -Test
+powershell.exe -NoProfile -STA -File "wang-dali\wang-dali.ps1" -Test
 ```
 
 ## 重新生成语音
 
 ```powershell
-$tips = (Get-Content sync\wang-dali-tips.json -Raw -Encoding UTF8 | ConvertFrom-Json).tips
+$tips = (Get-Content wang-dali\wang-dali-tips.json -Raw -Encoding UTF8 | ConvertFrom-Json).tips
 for ($i=0; $i -lt $tips.Count; $i++) {
   $n = $i + 1
   uvx --from edge-tts edge-tts --voice zh-CN-XiaoxiaoNeural --rate=-5% `
-    --text $tips[$i] --write-media ("sync\voice\tip-{0:D2}.mp3" -f $n)
+    --text $tips[$i] --write-media ("wang-dali\voice\tip-{0:D2}.mp3" -f $n)
 }
 ```
 
 弹窗**不会自动关闭**，必须手动点右上角 ×；关闭前提醒会一直保留。
 
+卡片是**无激活窗口**：出现时不接管键盘焦点，所以「朗读」「×」只能用鼠标点，Tab/空格快捷键对它不生效。这是不打断你打字的代价。
+
 ## 引用池
 
-`sync/wang-dali-quotes.json`：名人名言、名著、影视、动画、游戏台词；外文带中英双语。
+`wang-dali/wang-dali-quotes.json`：名人名言、名著、影视、动画、游戏台词；外文带中英双语。
 
 - 每次随机，不按固定顺序轮播
 - 状态记录最近 12 条，避免短期重复

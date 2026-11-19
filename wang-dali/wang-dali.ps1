@@ -1,4 +1,4 @@
-﻿param(
+param(
   [switch]$Test,
   [int]$TestCount = 1,
   [int]$TestSeconds = 6
@@ -129,7 +129,45 @@ function Show-Tip {
   # 提前初始化 WPF，避免点击“朗读”时才初始化导致窗口被 DPI/焦点重排
   $null = New-Object System.Windows.Media.MediaPlayer
 
-  $form = New-Object System.Windows.Forms.Form
+  # 不抢焦点：WS_EX_NOACTIVATE + ShowWithoutActivation。
+  # 卡片出现时不打断你正在打字的输入法、不把全屏游戏/编辑器顶到后台。
+  if (-not ('DshNoActivateForm' -as [type])) {
+    try {
+      # 三个引用都要给：PS7 下 Form 的基类 Component 在 System.ComponentModel.Primitives
+      $refs = @(
+        [System.Windows.Forms.Form].Assembly.Location,
+        [System.Drawing.Color].Assembly.Location,
+        [System.ComponentModel.Component].Assembly.Location
+      )
+      Add-Type -TypeDefinition @'
+using System.Windows.Forms;
+
+public class DshNoActivateForm : Form
+{
+    public bool NoActivate { get { return true; } }
+    protected override bool ShowWithoutActivation { get { return true; } }
+
+    protected override CreateParams CreateParams
+    {
+        get
+        {
+            CreateParams cp = base.CreateParams;
+            cp.ExStyle |= 0x08000000; // WS_EX_NOACTIVATE
+            cp.ExStyle |= 0x00000080; // WS_EX_TOOLWINDOW
+            return cp;
+        }
+    }
+}
+'@ -ReferencedAssemblies $refs
+    } catch {
+      Log ("no-activate form unavailable: {0}" -f $_.Exception.Message)
+    }
+  }
+  if ('DshNoActivateForm' -as [type]) {
+    $form = New-Object DshNoActivateForm
+  } else {
+    $form = New-Object System.Windows.Forms.Form
+  }
   $form.Text = '王大力 · 心理抚慰师'
   $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
   $form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::None
@@ -347,20 +385,19 @@ try {
   $last = Get-LastShown
   if ($last) {
     $elapsed = ((Get-Date) - $last).TotalSeconds
-    if ($elapsed -lt 1800) {
-      $wait = [int](1800 - $elapsed)
+    if ($elapsed -lt 5400) {
+      $wait = [int](5400 - $elapsed)
       Log ("recent tip {0}s ago; wait {1}s before first" -f [int]$elapsed, $wait)
       Start-Sleep -Seconds $wait
     }
   }
 
   Log 'started'
+  # 首弹不再等 09:00：启动即弹，之后按 90–120 分钟走；夜里开机也能先给一张。
   while ((Get-Date) -lt $end) {
-    $now = Get-Date
-    if ($now.Hour -lt 9) { Start-Sleep -Seconds 60; continue }
     $shownAt = Get-Date
     Show-Tip
-    $next = $shownAt.AddSeconds((Get-Random -Minimum 1800 -Maximum 2701))
+    $next = $shownAt.AddSeconds((Get-Random -Minimum 5400 -Maximum 7201))
     $sleep = [int](($next - (Get-Date)).TotalSeconds)
     if ($sleep -lt 1) { $sleep = 1 }
     Log ("next in {0}s (start-to-start)" -f $sleep)

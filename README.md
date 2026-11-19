@@ -1,12 +1,12 @@
 # DSH BOT Staff
 
-十三个本地自动化 BOT 的源码与资源。固定周期任务走 Windows 计划任务；按需同僚由 `@阿皮` / 命令行调用。
+十九个本地自动化 BOT 的源码与资源。固定周期任务走 Windows 计划任务；按需同僚由 `@阿皮` / 命令行调用。
 
 | BOT | 岗位 | 时间 | 任务名 |
 |---|---|---|---|
 | **张淑芬** | 知识库更新专员 | 工作日 18:30 更新 / 19:10 同步 / 19:15 验收 | `DSH GitHub Weekday Sync` |
 | **何大奔** | iCreat 用量分析师 | 每天 07:00 | `何大奔 · iCreat 用量提醒` |
-| **王大力** | 心理抚慰师 | 每天 09:00–24:00，每 30–45 分钟 | `王大力 · 心理抚慰师` |
+| **王大力** | 心理抚慰师 | 每天 09:00 启动，每 90–120 分钟，启动即弹 | `王大力 · 心理抚慰师` |
 | **李婶** | BOT 缓存清理员 | 每周二 21:00 | `李婶 · BOT缓存清理` |
 | **周哥** | 全栈工程师 / 主程 | 每 5 分钟 | `周哥 · 全栈主程巡检` |
 | **刘哥** | 全栈工程师 / 主程（复核） | 周哥弹窗时触发 | 无独立任务 |
@@ -17,8 +17,16 @@
 | **阿威** | 视频提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
 | **阿秃** | 代码提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
 | **阿音** | AI 音乐 / SUNO 提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
+| **老段** | 验收 QA | 按需；每次构建后必跑 | 独立 bot |
+| **闻姐** | 叙事一致性审计 | 按需；每次改稿后必跑 | 独立 bot |
+| **石导** | 视觉演出导演 | 按需；每次改画面后必跑 | 独立 bot |
+| **陈叔** | 音响 / 声音设计 | 按需；改音频后必跑 | 独立 bot |
+| **老苍** | 构建与包体 | 按需；发版前必跑 | 独立 bot |
+| **小策** | 策划 / 数值与分支 | 按需；改分支后必跑 | 独立 bot |
 
 > 阿美、阿威、阿秃、阿音与皮特·黄是平等的 BOT Staff，只是领域分工不同；每人独立脚本、独立记忆。
+
+> 老段、闻姐、石导、陈叔、老苍、小策是项目线验收组：只读工程、只出判定，均支持 `-NoUi`。
 
 ## 目录
 
@@ -33,6 +41,12 @@ pieter-huang/    PIETER-HUANG.md, pieter-huang.ps1, employees docs, prompt libra
 employees/       amei.ps1 / awei.ps1 / atu.ps1 / ayin.ps1 + employee-lib
 li-teacher/      HRD 绩效评分与报告
 wei-pi-ge/       VP 项目评分与目标更新
+lao-duan/        LAO-DUAN.md, lao-duan.ps1（验收 QA · 状态机）
+wen-jie/         WEN-JIE.md, wen-jie.ps1（叙事一致性审计）
+shi-dao/         SHI-DAO.md, shi-dao.ps1（视觉演出 / 分镜）
+chen-shu/        CHEN-SHU.md, chen-shu.ps1（音响 / WebAudio）
+lao-cang/        LAO-CANG.md, lao-cang.ps1（构建 / 包体）
+xiao-ce/         XIAO-CE.md, xiao-ce.ps1（策划 / 数值与分支）
 prompt-library/  wildcards/ 词库（生成内容默认不进 Git）
 tools/           iCreat 登录态读取/调试脚本
 ```
@@ -52,6 +66,22 @@ schtasks /Create /TN "周哥 · 全栈主程巡检" /TR "C:\path\to\zhou-ge\zhou
 schtasks /Create /TN "皮特·黄 · 长提示词检查" /TR "C:\path\to\pieter-huang\pieter-huang.cmd" /SC MINUTE /MO 2 /F
 schtasks /Create /TN "皮特·黄 · 每日提示词库" /TR "C:\path\to\pieter-huang\prompt-library.cmd" /SC DAILY /ST 19:30 /F
 ```
+
+## 项目线验收组
+
+老段、闻姐、石导、陈叔、老苍、小策不注册计划任务：改完工程手动跑一次，全部支持 `-NoUi` 输出纯文本判定。
+
+```powershell
+.\lao-duan\lao-duan.ps1 -NoUi -Project "C:\path\to\project"
+.\wen-jie\wen-jie.ps1   -NoUi -Project "C:\path\to\project"
+.\shi-dao\shi-dao.ps1   -NoUi -Project "C:\path\to\project"
+.\chen-shu\chen-shu.ps1 -NoUi -Project "C:\path\to\project"
+.\lao-cang\lao-cang.ps1 -NoUi -Project "C:\path\to\project"
+.\xiao-ce\xiao-ce.ps1   -NoUi -Project "C:\path\to\project"
+```
+
+判定用统一的三档：`PASS` / `WARN` / `FAIL`（各自的结论名如 `BLOCK`、`MUTE`、`BLOATED`、`BROKEN` 都在同一套口径下）。
+去掉 `-NoUi` 则弹出同款卡片，按钮为「复制 / 关闭」，**不会自动关闭**。
 
 ## 隐私
 
