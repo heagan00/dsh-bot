@@ -22,6 +22,7 @@ li-shen/         LI-SHEN.md, li-shen-cleanup.ps1, li-shen.cmd
 zhou-ge/         ZHOU-GE.md, zhou-ge.ps1, zhou-ge.cmd
 liu-ge/          LIU-GE.md, liu-ge.ps1, liu-ge.cmd
 pieter-huang/    PIETER-HUANG.md, pieter-huang.ps1, employees docs, prompt library scripts
+employees/       amei.ps1 / awei.ps1 / atu.ps1 + employee-lib
 prompt-library/  wildcards/ 词库（生成内容默认不进 Git）
 tools/           iCreat 登录态读取/调试脚本
 ```

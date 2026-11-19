@@ -10,6 +10,16 @@
 | **刘哥** | 全栈工程师 / 主程（复核） | 周哥弹窗时触发 | 无独立任务 | 复核周哥提醒，误报时主屏底部中间提示 |
 | **皮特·黄** | 提示词结构工程师 / 主程 | 每 2 分钟；每日 19:30 | `皮特·黄 · 长提示词检查` / `皮特·黄 · 每日提示词库` | 长提示词整理、@阿皮 员工菜单、提示词库分类 |
 
+## 皮特·黄的下属 bot
+
+| 员工 | 领域 | 独立脚本 | 记忆 |
+|---|---|---|---|
+| **阿美** | 美术提示词 | `amei.ps1` | `memory/amei-memory.json` |
+| **阿威** | 视频提示词 | `awei.ps1` | `memory/awei-memory.json` |
+| **阿秃** | 代码提示词 | `atu.ps1` | `memory/atu-memory.json` |
+
+三名员工由 `@阿皮` 子菜单启动；也可用命令行 `-Prompt` 单独调用。
+
 ## 文件
 
 - 张淑芬：[BOT.md](BOT.md)、[weekday-sync.ps1](weekday-sync.ps1)、[run-weekday-sync.cmd](run-weekday-sync.cmd)
