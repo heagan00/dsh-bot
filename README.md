@@ -1,6 +1,6 @@
 # DSH BOT Staff
 
-六个本地自动化 BOT 的源码与资源。都走 Windows 计划任务，不依赖 DSH 在线，不需要逐次授权。
+七个本地自动化 BOT 的源码与资源。都走 Windows 计划任务，不依赖 DSH 在线，不需要逐次授权。
 
 | BOT | 岗位 | 时间 | 任务名 |
 |---|---|---|---|
@@ -10,6 +10,7 @@
 | **李婶** | BOT 缓存清理员 | 每周二 21:00 | `李婶 · BOT缓存清理` |
 | **周哥** | 全栈工程师 / 主程 | 每 5 分钟 | `周哥 · 全栈主程巡检` |
 | **刘哥** | 全栈工程师 / 主程（复核） | 周哥弹窗时触发 | 无独立任务 |
+| **皮特·黄** | 提示词结构工程师 / 主程 | 每 2 分钟；每日 19:30 | `皮特·黄 · 长提示词检查` / `皮特·黄 · 每日提示词库` |
 
 ## 目录
 
@@ -20,6 +21,8 @@ wang-dali/       WANG-DALI.md, wang-dali.ps1, tips, audio/, voice/
 li-shen/         LI-SHEN.md, li-shen-cleanup.ps1, li-shen.cmd
 zhou-ge/         ZHOU-GE.md, zhou-ge.ps1, zhou-ge.cmd
 liu-ge/          LIU-GE.md, liu-ge.ps1, liu-ge.cmd
+pieter-huang/    PIETER-HUANG.md, pieter-huang.ps1, employees docs, prompt library scripts
+prompt-library/  wildcards/ 词库（生成内容默认不进 Git）
 tools/           iCreat 登录态读取/调试脚本
 ```
 
@@ -35,6 +38,8 @@ schtasks /Create /TN "何大奔 · iCreat 用量提醒" /TR "C:\path\to\he-daben
 schtasks /Create /TN "王大力 · 心理抚慰师" /TR "C:\path\to\wang-dali\wang-dali.cmd" /SC DAILY /ST 09:00 /F
 schtasks /Create /TN "李婶 · BOT缓存清理" /TR "C:\path\to\li-shen\li-shen.cmd" /SC WEEKLY /D TUE /ST 21:00 /F
 schtasks /Create /TN "周哥 · 全栈主程巡检" /TR "C:\path\to\zhou-ge\zhou-ge.cmd" /SC MINUTE /MO 5 /F
+schtasks /Create /TN "皮特·黄 · 长提示词检查" /TR "C:\path\to\pieter-huang\pieter-huang.cmd" /SC MINUTE /MO 2 /F
+schtasks /Create /TN "皮特·黄 · 每日提示词库" /TR "C:\path\to\pieter-huang\prompt-library.cmd" /SC DAILY /ST 19:30 /F
 ```
 
 ## 隐私
