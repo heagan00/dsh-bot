@@ -77,10 +77,14 @@ function Show-Tip {
 
   Add-Type -AssemblyName System.Windows.Forms
   Add-Type -AssemblyName System.Drawing
+  Add-Type -AssemblyName PresentationCore
+  # 提前初始化 WPF，避免点击“朗读”时才初始化导致窗口被 DPI/焦点重排
+  $null = New-Object System.Windows.Media.MediaPlayer
 
   $form = New-Object System.Windows.Forms.Form
   $form.Text = '王大力 · 心理抚慰师'
   $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
+  $form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::None
   $form.StartPosition = [System.Windows.Forms.FormStartPosition]::Manual
   $form.TopMost = $true
   $form.ShowInTaskbar = $false
@@ -91,6 +95,14 @@ function Show-Tip {
   $wa = $screen.WorkingArea
   $form.Left = $wa.Left + 24
   $form.Top = $wa.Bottom - $form.Height - 24
+  $script:wangFixedLeft = $form.Left
+  $script:wangFixedTop = $form.Top
+  $form.Add_Move({
+    if ($null -ne $script:wangFixedLeft -and ($form.Left -ne $script:wangFixedLeft -or $form.Top -ne $script:wangFixedTop)) {
+      $form.Left = $script:wangFixedLeft
+      $form.Top = $script:wangFixedTop
+    }
+  })
   Log ("screen={0} bounds={1}" -f $screen.DeviceName, $screen.Bounds)
 
   $accent = New-Object System.Windows.Forms.Panel
