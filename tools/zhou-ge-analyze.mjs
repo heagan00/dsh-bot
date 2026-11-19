@@ -61,7 +61,7 @@ for (const file of files) {
   const lastTime = last?.time || last?.data?.time || 0;
 
   let turnStart = 0, turnEnd = 0, steps = 0;
-  let tokens = 0, recentTokens = 0, retries = 0, subagents = 0, editCalls = 0, toolCalls30 = 0;
+  let tokens = 0, recentTokens = 0, recentFresh = 0, recentCacheRead = 0, retries = 0, subagents = 0, editCalls = 0, toolCalls30 = 0;
   let lastUser = '', lastAssistant = '';
   const callCounts = new Map();
   const openJobs = new Map();
@@ -75,9 +75,19 @@ for (const file of files) {
     if (e.type === 'llm/retry' && t >= cutoff) retries++;
     if (e.type === 'subagent/descriptor') subagents++;
     if (e.type === 'assistant/message') {
-      const used = Number(d.usage?.totalTokens || 0);
+      const u = d.usage || {};
+      const used = Number(u.totalTokens || 0);
       tokens += used;
-      if (t >= cutoff) recentTokens += used;
+      if (t >= cutoff) {
+        recentTokens += used;
+        // 只把「新增上下文」算成消耗：缓存读取是历史复用，便宜且必然随会话变长，
+        // 按 totalTokens 报警会把长会话一律判成烧算力（刘哥已确认这是误报）。
+        const fresh = (u.inputTokens != null || u.outputTokens != null)
+          ? Number(u.inputTokens || 0) + Number(u.outputTokens || 0) + Number(u.cacheWriteTokens || 0)
+          : used;
+        recentFresh += fresh;
+        recentCacheRead += Number(u.cacheReadTokens || 0);
+      }
       const txt = textOf(d.message?.content);
       if (txt) lastAssistant = txt;
     }
@@ -111,7 +121,7 @@ for (const file of files) {
   const openJobList = [...openJobs.entries()].map(([jobId, start]) => ({ jobId, ageMin: Math.round((now - start * 1000) / 60000) }));
   const longJobs = openJobList.filter((j) => j.ageMin >= 30);
 
-  sessions.push({ id, title, file, modified: fs.statSync(file).mtimeMs, activeTurn, steps, tokens, recentTokens, retries, subagents, editCalls, toolCalls30, repeated, openJobs: openJobList, lastUser: lastUser.slice(0, 200) });
+  sessions.push({ id, title, file, modified: fs.statSync(file).mtimeMs, activeTurn, steps, tokens, recentTokens, recentFreshTokens: recentFresh, recentCacheReadTokens: recentCacheRead, retries, subagents, editCalls, toolCalls30, repeated, openJobs: openJobList, lastUser: lastUser.slice(0, 200) });
 
   if (repeated.length) {
     const r = repeated[0];
@@ -138,10 +148,10 @@ for (const file of files) {
       advice: '先查 job 输出/进程，能结束就结束；不要让后台任务一直占算力。把长任务拆成可验收的小步。',
     });
   }
-  if (recentTokens >= 1500000) {
+  if (recentFresh >= 1500000) {
     alerts.push({
       level: 'high', sessionId: id, title, key: `token:${id}`,
-      message: `近 ${windowMinutes} 分钟消耗 ${Math.round(recentTokens / 1000)}k tokens`,
+      message: `近 ${windowMinutes} 分钟新增上下文 ${Math.round(recentFresh / 1000)}k tokens（缓存读取 ${Math.round(recentCacheRead / 1000)}k 另计，不算消耗）`,
       advice: '算力消耗过高。先停掉无关工具调用，明确当前 turn 的验收标准；必要时开新会话，只带必要上下文，避免整个历史反复重跑。',
     });
   }

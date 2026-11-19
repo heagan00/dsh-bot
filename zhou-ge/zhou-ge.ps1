@@ -1,7 +1,7 @@
 param(
   [switch]$NoToast,
   [switch]$Force,
-  [int]$IdleAfter = 10,
+  [int]$IdleAfter = 30,
   [string]$SessionsRoot = ''
 )
 
@@ -30,6 +30,7 @@ try {
 
   # 没有正在进行的对话 → 周哥不启动。
   # 第一道：这个窗口内没有任何会话文件被写过，连分析器都不用起。
+  # 窗口取 30 分钟：一次工具调用可能 20 分钟不写盘，窗口太短会把「正在回答」误判成「没人」。
   if (-not $Force) {
     $freshCut = (Get-Date).AddMinutes(-$IdleAfter)
     $fresh = @(Get-ChildItem -Path $SessionsRoot -Recurse -File -Filter 'session.*.jsonl.zstd' -ErrorAction SilentlyContinue |
@@ -53,9 +54,9 @@ try {
   if (-not (Test-Path $jsonFile)) { Log 'no report'; exit 1 }
   $data = Get-Content $jsonFile -Raw -Encoding UTF8 | ConvertFrom-Json
 
-  # 第二道：有会话在动，但没有任何一个 turn 处于「问完了还没答完」的状态 → 同样不启动。
-  $cut = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - ($IdleAfter * 60000)
-  $inflight = @($data.sessions | Where-Object { $_.activeTurn -and ([long]$_.modified -ge $cut) })
+  # 第二道：有会话在动，但没有任何一个 turn 处于「开问了还没答完」的状态 → 同样不启动。
+  # 分析器本来就只读 30 分钟窗口内的文件，所以这里不必再套一层时间窗。
+  $inflight = @($data.sessions | Where-Object { $_.activeTurn })
   if (-not $Force -and $inflight.Count -eq 0) {
     Log ("skip: no conversation answering (sessions={0})" -f $data.activeSessions)
     exit 0
