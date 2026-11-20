@@ -10,7 +10,7 @@
 | **李婶** | BOT 缓存清理员 | 每周二 21:00 | `李婶 · BOT缓存清理` |
 | **周哥** | 全栈工程师 / 主程 | 每 5 分钟（仅有正在回答的对话时巡检） | `周哥 · 全栈主程巡检` |
 | **刘哥** | 全栈工程师 / 主程（复核） | 周哥弹窗时触发 | 无独立任务 |
-| **皮特·黄** | 提示词结构工程师 / 主程 | 每 2 分钟；每日 19:30 | `皮特·黄 · 长提示词检查` / `皮特·黄 · 每日提示词库` |
+| **皮特·黄** | 提示词结构工程师 / 主程 | 输入框常驻监听（每 400ms：`@阿皮` / 超长输入）；每日 19:30 | `皮特·黄 · 每日提示词库`（无长提示词轮询任务） |
 | **李老师** | HRD / BOT 绩效 | 每天 22:30；周报/月报 | `李老师 · BOT绩效` |
 | **伟痞哥** | VP / 项目与商业 | 每天 21:00 / 22:00 | `伟痞哥 · 项目复盘` / `伟痞哥 · 项目更新` |
 | **阿美** | 美术提示词工程师 | 按需（@阿皮 / 命令行） | 独立 bot |
@@ -63,8 +63,13 @@ schtasks /Create /TN "何大奔 · iCreat 用量提醒" /TR "C:\path\to\he-daben
 schtasks /Create /TN "王大力 · 心理抚慰师" /TR "C:\path\to\wang-dali\wang-dali.cmd" /SC DAILY /ST 09:00 /F
 schtasks /Create /TN "李婶 · BOT缓存清理" /TR "C:\path\to\li-shen\li-shen.cmd" /SC WEEKLY /D TUE /ST 21:00 /F
 schtasks /Create /TN "周哥 · 全栈主程巡检" /TR "C:\path\to\zhou-ge\zhou-ge.cmd" /SC MINUTE /MO 5 /F
-schtasks /Create /TN "皮特·黄 · 长提示词检查" /TR "C:\path\to\pieter-huang\pieter-huang.cmd" /SC MINUTE /MO 2 /F
 schtasks /Create /TN "皮特·黄 · 每日提示词库" /TR "C:\path\to\pieter-huang\prompt-library.cmd" /SC DAILY /ST 19:30 /F
+```
+
+皮特·黄没有轮询任务：长提示词改由常驻的输入框监听器在**发送前**发现。登录启动项里只放一条：
+
+```cmd
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v PieterInputWatch /t REG_SZ /d "C:\path\to\pieter-huang\pieter-input-watch.cmd" /f
 ```
 
 ## 项目线验收组
