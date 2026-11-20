@@ -1,4 +1,4 @@
-param(
+﻿param(
   [switch]$NoToast,
   [switch]$Force,
   [int]$IdleAfter = 30,
@@ -20,6 +20,29 @@ if (-not $SessionsRoot) { $SessionsRoot = Join-Path $env:USERPROFILE '.dsh\sessi
 
 function Log([string]$msg) {
   Add-Content -Path $logFile -Value ("[{0}] {1}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $msg) -Encoding utf8
+}
+
+# 记忆键归一：「同一个问题」= 去掉会话 id 之后的 key。
+# 分析器的 key 形如 repeat:<sessionId>:wait_agent、token:<sessionId>、dupe:<目标>，
+# 去掉 session-* 段后就是跨会话稳定的问题标识（repeat:wait_agent / token）。
+function Get-IssueKey([string]$key) {
+  if (-not $key) { return '' }
+  $parts = @($key -split ':' | Where-Object { $_ -ne '' -and $_ -notlike 'session-*' })
+  return ($parts -join ':')
+}
+
+# 刘哥脚本的落点：部署时可能拷平到本目录，仓库里在 ..\liu-ge\ 下。
+# 以前写死 $root\liu-ge.ps1，仓库布局下 Test-Path 为假就静默不断言，周哥→刘哥这条链路是断的。
+function Find-LiuGe {
+  $candidates = @(
+    (Join-Path $root 'liu-ge.ps1'),
+    (Join-Path $root '..\liu-ge\liu-ge.ps1'),
+    (Join-Path $root '..\..\liu-ge\liu-ge.ps1')
+  )
+  foreach ($c in $candidates) {
+    if (Test-Path -LiteralPath $c) { return (Resolve-Path -LiteralPath $c).Path }
+  }
+  return $null
 }
 
 $mutex = New-Object System.Threading.Mutex($false, 'Global\ZhouGeBot')
@@ -44,8 +67,17 @@ try {
   $old = $env:ELECTRON_RUN_AS_NODE
   $env:ELECTRON_RUN_AS_NODE = '1'
   try {
+    $startedAt = Get-Date
     $p = Start-Process -FilePath $node -ArgumentList @($analyzer, '--minutes=30', "--root=$SessionsRoot", "--out=$jsonFile") -Wait -PassThru -NoNewWindow
-    if ($p.ExitCode -ne 0) { Log "analyzer failed $($p.ExitCode)"; exit 1 }
+    $code = $null
+    try { $code = $p.ExitCode } catch { $code = $null }
+    # Electron 以 node 方式跑时 ExitCode 经常读不到（$null），这时只认产物：
+    # 报错判定改成「拿到明确非 0 才算失败」+「报告必须是本次新写的」。
+    if ($null -ne $code -and $code -ne 0) { Log "analyzer failed code=$code"; exit 1 }
+    if (-not (Test-Path $jsonFile) -or (Get-Item $jsonFile).LastWriteTime -lt $startedAt.AddSeconds(-2)) {
+      Log 'analyzer produced no fresh report'
+      exit 1
+    }
   } finally {
     if ($null -eq $old) { Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue }
     else { $env:ELECTRON_RUN_AS_NODE = $old }
@@ -68,7 +100,9 @@ try {
     exit 0
   }
 
-  # 周哥的小脑袋瓜：刘哥已确认的误报不再重复弹
+  # ── 记忆是「弹不弹」的第一道判断 ────────────────────────────────
+  # 刘哥复核否定 + 用户手动确认（勾“同意”并点“确认关闭”）过的同类问题，
+  # 下次再出现直接不提示；与是不是同一个会话无关，只认“同一个问题”。
   $memoryDir = Join-Path $root '..\memory'
   if (-not (Test-Path $memoryDir)) { $memoryDir = Join-Path $root 'memory' }
   $memoryFile = Join-Path $memoryDir 'zhou-memory.json'
@@ -77,15 +111,20 @@ try {
     try {
       $m = Get-Content $memoryFile -Raw -Encoding UTF8 | ConvertFrom-Json
       if ($m.entries) { $m.entries.PSObject.Properties | ForEach-Object { $memory[$_.Name] = $_.Value } }
-    } catch {}
+    } catch { Log 'memory parse failed, ignore memory this round' }
   }
   $kept = @()
   $suppressed = @()
   foreach ($a in $alerts) {
-    $pattern = ([string]$a.key -split ':')[0]
-    $mem = $memory[$pattern]
-    if ($mem -and $mem.agreed -and [int]$mem.count -gt 0 -and [string]$mem.session -eq [string]$a.sessionId) {
-      Log ("memory suppress pattern={0} key={1}" -f $pattern, $a.key)
+    $key = [string]$a.key
+    $pattern = ($key -split ':')[0]
+    $issueKey = Get-IssueKey $key
+    $mem = $memory[$issueKey]
+    $hitBy = $issueKey
+    if (-not $mem -and $key -ne $issueKey) { $mem = $memory[$key]; $hitBy = $key }
+    if (-not $mem) { $mem = $memory[$pattern]; $hitBy = $pattern }
+    if ($mem -and ($mem.agreed -eq $true) -and [int]$mem.count -gt 0) {
+      Log ("memory suppress key={0} issue={1} hit={2} count={3} last={4}" -f $key, $issueKey, $hitBy, $mem.count, $mem.last)
       $suppressed += $a
       continue
     }
@@ -94,10 +133,12 @@ try {
   $alerts = $kept
   if ($suppressed.Count -gt 0) {
     # 周哥不再重复误报，但仍让刘哥做一次重复误报纠偏
-    $liuScript = Join-Path $root 'liu-ge.ps1'
-    if (Test-Path $liuScript) {
+    $liuScript = Find-LiuGe
+    if ($liuScript) {
       Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-File', $liuScript, '-RepeatAudit') -WindowStyle Minimized
-      Log ("trigger liu repeat audit suppressed={0}" -f $suppressed.Count)
+      Log ("trigger liu repeat audit suppressed={0} path={1}" -f $suppressed.Count, $liuScript)
+    } else {
+      Log 'liu-ge.ps1 not found (expected .\liu-ge.ps1 or ..\liu-ge\liu-ge.ps1): repeat audit skipped'
     }
   }
   if ($alerts.Count -eq 0) { Log 'all suppressed by memory'; exit 0 }
@@ -158,10 +199,12 @@ try {
   if ($NoToast) { Write-Output $body; exit 0 }
 
   # 刘哥只在周哥真正要弹窗时启动复核，不单独定时巡检
-  $liuScript = Join-Path $root 'liu-ge.ps1'
-  if (Test-Path $liuScript) {
+  $liuScript = Find-LiuGe
+  if ($liuScript) {
     Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-File', $liuScript) -WindowStyle Minimized
-    Log 'trigger liu-ge (zhou popup)'
+    Log ("trigger liu-ge (zhou popup) path={0}" -f $liuScript)
+  } else {
+    Log 'liu-ge.ps1 not found (expected .\liu-ge.ps1 or ..\liu-ge\liu-ge.ps1): liu-ge review skipped'
   }
 
   Add-Type -AssemblyName System.Windows.Forms

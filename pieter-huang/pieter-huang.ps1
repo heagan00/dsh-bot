@@ -29,7 +29,8 @@ function Run-Node([string]$script, [string[]]$arguments) {
   $env:ELECTRON_RUN_AS_NODE = '1'
   try {
     $p = Start-Process -FilePath $node -ArgumentList (@($script) + $arguments) -Wait -PassThru -NoNewWindow
-    return $p.ExitCode
+    # Electron 以 node 方式跑时 ExitCode 常常读不到，返回 $null 交给调用方按产物判断
+    try { return $p.ExitCode } catch { return $null }
   } finally {
     if ($null -eq $old) { Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue } else { $env:ELECTRON_RUN_AS_NODE = $old }
   }
@@ -330,7 +331,7 @@ if ($Test) {
 # 从会话日志里只挑真实用户输入，丢掉太短的（<100 字）与系统注入的噪声，
 # 按消息 id 去重、按时间取最近 5 条、只处理第一条命中。
 $code = Run-Node $watchScript @("--out=$watchJson")
-if ($code -ne 0 -or -not (Test-Path $watchJson)) { Log 'watch failed'; exit 1 }
+if (($null -ne $code -and $code -ne 0) -or -not (Test-Path $watchJson)) { Log 'watch failed'; exit 1 }
 $data = Get-Content $watchJson -Raw -Encoding UTF8 | ConvertFrom-Json
 $alerts = @($data.alerts)
 if ($alerts.Count -eq 0) { exit 0 }

@@ -25,6 +25,12 @@ function Log([string]$msg) {
   Add-Content -Path $logFile -Value ("[{0}] {1}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $msg) -Encoding utf8
 }
 
+function Get-IssueKey([string]$key) {
+  if (-not $key) { return '' }
+  $parts = @($key -split ':' | Where-Object { $_ -ne '' -and $_ -notlike 'session-*' })
+  return ($parts -join ':')
+}
+
 function Save-ZhouMemory($finding, [bool]$agree) {
   $mem = @{ owner = '周哥'; updated = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); entries = @{} }
   if (Test-Path $memoryFile) {
@@ -33,9 +39,14 @@ function Save-ZhouMemory($finding, [bool]$agree) {
       if ($old.entries) { $old.entries.PSObject.Properties | ForEach-Object { $mem.entries[$_.Name] = $_.Value } }
     } catch {}
   }
+  $zhouKey = [string]$finding.zhouKey
   $pattern = [string]$finding.pattern
-  if (-not $pattern) { $pattern = ([string]$finding.zhouKey -split ':')[0] }
-  $entry = $mem.entries[$pattern]
+  if (-not $pattern) { $pattern = ($zhouKey -split ':')[0] }
+  # 记忆按「同一个问题」记：用去掉会话 id 的 key（repeat:wait_agent / token），
+  # 周哥下次遇到同一个问题就直接命中、不再提示，跨会话同样生效。
+  $issueKey = Get-IssueKey $zhouKey
+  $entryKey = if ($issueKey) { $issueKey } elseif ($zhouKey) { $zhouKey } else { $pattern }
+  $entry = $mem.entries[$entryKey]
   if (-not $entry) {
     $entry = [pscustomobject]@{ count = 0; agreed = $false; last = ''; session = ''; zhouMessage = ''; judgment = '' }
   }
@@ -45,7 +56,7 @@ function Save-ZhouMemory($finding, [bool]$agree) {
   $entry.session = [string]$finding.sessionId
   $entry.zhouMessage = [string]$finding.zhouMessage
   $entry.judgment = if ($agree) { '刘哥判断正确：周哥本次为误报' } else { '用户不同意刘哥判断' }
-  $mem.entries[$pattern] = $entry
+  $mem.entries[$entryKey] = $entry
   $mem | ConvertTo-Json -Depth 6 | Set-Content $memoryFile -Encoding utf8
 
   $rows = @('# 周哥的小脑袋瓜', '', '> 周哥（刘哥下属）记录刘哥复核结论；同意后才用于抑制同类误报。', '', '| 模式 | 次数 | 结论 | 最近 |', '|---|---:|---|---|')
@@ -54,7 +65,7 @@ function Save-ZhouMemory($finding, [bool]$agree) {
     $rows += ("| {0} | {1} | {2} | {3} |" -f $k, $e.count, $e.judgment, $e.last)
   }
   Set-Content (Join-Path $memoryDir '周哥的小脑袋瓜.md') ($rows -join "`n") -Encoding utf8
-  Log ("memory pattern={0} agree={1} count={2}" -f $pattern, $agree, $entry.count)
+  Log ("memory key={0} agree={1} count={2}" -f $entryKey, $agree, $entry.count)
 }
 
 function Run-Node([string]$script, [string[]]$arguments) {
@@ -62,7 +73,8 @@ function Run-Node([string]$script, [string[]]$arguments) {
   $env:ELECTRON_RUN_AS_NODE = '1'
   try {
     $p = Start-Process -FilePath $node -ArgumentList (@($script) + $arguments) -Wait -PassThru -NoNewWindow
-    return $p.ExitCode
+    # Electron 以 node 方式跑时 ExitCode 常常读不到，返回 $null 交给调用方按产物判断
+    try { return $p.ExitCode } catch { return $null }
   } finally {
     if ($null -eq $old) { Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue }
     else { $env:ELECTRON_RUN_AS_NODE = $old }
@@ -75,9 +87,9 @@ if (-not $mutex.WaitOne(0)) { exit 0 }
 try {
   if (-not (Test-Path $node)) { Log 'node missing'; exit 1 }
   $code = Run-Node $zhouAnalyzer @('--minutes=30', "--out=$zhouJson")
-  if ($code -ne 0) { Log "zhou analyzer failed $code"; exit 1 }
+  if ($null -ne $code -and $code -ne 0) { Log "zhou analyzer failed $code"; exit 1 }
   $code = Run-Node $auditor @("--report=$zhouJson", "--out=$auditJson", "--memory=$memoryFile")
-  if ($code -ne 0) { Log "audit failed $code"; exit 1 }
+  if ($null -ne $code -and $code -ne 0) { Log "audit failed $code"; exit 1 }
 
   if (-not (Test-Path $auditJson)) { Log 'no audit'; exit 1 }
   $audit = Get-Content $auditJson -Raw -Encoding UTF8 | ConvertFrom-Json
